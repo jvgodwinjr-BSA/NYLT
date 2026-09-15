@@ -1,0 +1,166 @@
+{
+  "_comment": "Normalization rules for scripts/import-catalog.mjs. Keys are matched after trim + whitespace collapse + case-insensitive compare.",
+  "rename": {
+    "Wake up participants at 6:30": "Wake Up",
+    "Gillwell": "Gilwell",
+    "Opening Gillwell": "Opening Gilwell",
+    "Final Gillwell": "Final Gilwell",
+    "Registration/Orientaion Trail": "Registration / Orientation Trail",
+    "Check in trail": "Check-in Trail",
+    "Dissmissal": "Dismissal",
+    "Movie Disscussion": "Movie Discussion",
+    "Movie Night (Apollo 13)": "Movie Night",
+    "Scouts own": "Scouts' Own Service",
+    "Scouts Own Service": "Scouts' Own Service",
+    "Camp Cleanup/Packup": "Camp Cleanup / Pack Up",
+    "Camp Cleanup/packup": "Camp Cleanup / Pack Up",
+    "Campsite setup/ Patrol Formation": "Campsite Setup / Patrol Formation",
+    "Cracker Barrel/Patrol Time": "Cracker Barrel / Patrol Time",
+    "Troop/Patrol Photos": "Troop / Patrol Photos",
+    "PLC": "PLC Meeting",
+    "Interpatrol activity (Geocaching)": "Geocaching Activity",
+    "Participant break/early sleep time": "Participant Break / Early Sleep",
+    "Break time": "Break",
+    "Transition time": "Transition",
+    "Staff break": "Staff Break",
+    "Staff break/ eepy time": "Staff Break / Sleep Time",
+    "\"The Hidden Diversity Within Us\" Game": "Hidden Diversity Within Us Game",
+    "“The Hidden Diversity Within Us” Game": "Hidden Diversity Within Us Game",
+    "Patrol time (song/skit/story)": "Patrol Time (song / skit / story)",
+    "Styles of leadership game": "Styles of Leadership Game",
+    "Pack for outpost": "Pack for Outpost",
+    "Depart for outpost": "Depart for Outpost",
+    "Return from outpost": "Return from Outpost",
+    "All partol at outpost": "Outpost",
+    "FEAST": "Outpost Feast",
+    "Developing your team": "Developing Your Team",
+    "Setting your Goals": "Setting Your Goals",
+    "Ethics and Values": "Ethics and Values in Decision-making",
+    "Com 1": "Communicating—Part 1: The Model",
+    "Com 2": "Communicating—Part 2: The Sender",
+    "Com 3": "Communicating—Part 3: The Message",
+    "Com 4": "Communicating—Part 4: The Receiver",
+    "Com 5": "Communicating—Part 5: The Story",
+    "Com 6": "Communicating—Part 6: Communicating with Adults"
+  },
+  "skip": [
+    "Module Delivery",
+    "Day 1",
+    "Day 2",
+    "Day 3",
+    "Day 4",
+    "Day 5",
+    "Day 6"
+  ],
+  "duration_overrides": {
+    "Outpost": 240,
+    "Lights Out": 15,
+    "Wake Up": 15,
+    "Transition": 15,
+    "Dismissal": 15
+  },
+  "type_overrides": {
+    "Outpost": "outpost",
+    "Outpost Feast": "meal",
+    "Lovefest": "ceremony",
+    "Party": "other",
+    "Expectations": "other",
+    "Patrol Quest Presentation": "other",
+    "SPL Election": "meeting",
+    "YPT Session (course intro)": "other",
+    "Pioneering Project": "game",
+    "Solving Problems Round Robin": "game"
+  },
+  "type_keywords": [
+    [
+      "meal",
+      [
+        "breakfast",
+        "lunch",
+        "dinner",
+        "feast",
+        "cracker barrel"
+      ]
+    ],
+    [
+      "ceremony",
+      [
+        "gilwell",
+        "scouts' own",
+        "campfire",
+        "flag",
+        "callout"
+      ]
+    ],
+    [
+      "meeting",
+      [
+        "plc",
+        "patrol meeting",
+        "troop meeting",
+        "model"
+      ]
+    ],
+    [
+      "game",
+      [
+        "game",
+        "challenge",
+        "geocaching",
+        "lego",
+        "movie"
+      ]
+    ],
+    [
+      "logistics",
+      [
+        "registration",
+        "check-in",
+        "campsite",
+        "cleanup",
+        "pack",
+        "depart",
+        "return",
+        "transition",
+        "break",
+        "lights out",
+        "wake up",
+        "dismissal",
+        "photos",
+        "sleep"
+      ]
+    ]
+  ],
+  "hard_types": [
+    "presentation",
+    "meal",
+    "ceremony",
+    "meeting",
+    "outpost"
+  ],
+  "staff_only": [
+    "Staff Break",
+    "Staff Break / Sleep Time"
+  ],
+  "scrub_allow_common_words": [
+    "will",
+    "max",
+    "lane",
+    "crystal",
+    "amber",
+    "emerald",
+    "sam",
+    "chris"
+  ],
+  "_comment_scrub": "Names are never listed in this file. The importer refuses to write output containing any name in roster.local.csv or any word in scripts/scrub.local.txt (both gitignored). Tokens in scrub_allow_common_words are only refused as part of a full-name phrase.",
+  "rename_regex": [
+    [
+      "^\\w+ sleepy time$",
+      "Wake Up"
+    ],
+    [
+      "^\\w+ ya?pt? session \\(course intro\\)$",
+      "YPT Session (course intro)"
+    ]
+  ]
+}

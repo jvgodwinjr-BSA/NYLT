@@ -1,0 +1,11 @@
+id,name,duration_min,type,audience,delivery,soft_vs_hard,tags,notes
+staff-meeting,Staff Meeting,60,meeting,staff,Staff,hard,staff|sd,All-hands staff meeting
+presentation-practice-block,Presentation Practice Block,60,staff_task,staff,Staff,soft,staff|sd|practice,Generic rehearsal slot. Prefer placing the actual presentation so coverage tracks it.
+tg-patrol-practice,TG Patrol Practice,60,staff_task,staff,TG,soft,staff|sd|tg,Troop Guides rehearse patrol delivery (Com 2-4 and model meetings)
+qm-work-block,QM Work Block,60,staff_task,staff,Staff,soft,staff|sd|qm,Quartermaster crew work time
+qm-inventory,QM Inventory and Gear Check,90,staff_task,staff,Staff,soft,staff|sd|qm,
+qm-outpost-prep,QM Outpost Prep,90,staff_task,staff,Staff,soft,staff|sd|qm,Outpost gear and food staging
+course-director-briefing,Course Director Briefing,30,meeting,staff,Staff,hard,staff|sd,
+dress-rehearsal-walkthrough,Dress Rehearsal Walkthrough,120,staff_task,staff,Staff,hard,staff|sd4,SD4 full run-through
+staff-arrival-checkin,Staff Arrival and Check-in,45,logistics,staff,Staff,hard,staff|w1|w2,
+to-campsites,To Campsites,30,logistics,troop,Troop,soft,logistics,
