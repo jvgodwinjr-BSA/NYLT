@@ -1,0 +1,46 @@
+name: Bug report
+description: Something in the scheduler does not work the way it should
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Before you post:** no real names in the description or screenshots. Take screenshots
+        locked (click "Continue without names") so blocks show role codes.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, and what the scheduler did instead of what you expected.
+      placeholder: I dragged Servant Leadership onto Saturday 11:00 and it landed at 10:45.
+    validations: { required: true }
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Course Weekend 2
+        2. Drag ... from the left rail onto ...
+        3. Look at ...
+    validations: { required: true }
+  - type: input
+    id: event
+    attributes:
+      label: Which event
+      placeholder: Course Weekend 2 / SD3 / all of them
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and device
+      placeholder: Chrome on Windows laptop / Safari on iPhone
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options: [The deployed site, Local npm run dev, Both]
+    validations: { required: true }
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Screenshots (locked), or the browser console if you know how to open it.

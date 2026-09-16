@@ -1,0 +1,8 @@
+id,event_id,rule_type,params,severity,description
+outpost-sat-night,W2,lock_slot,"{""activity_id"":""outpost"",""day"":""2027-02-20"",""not_before"":""17:00""}",hard,Outpost is locked to Saturday night of Weekend 2.
+w2-fri-campfire,W2,lock_slot,"{""activity_id"":""inspirational-campfire"",""day"":""2027-02-19"",""not_before"":""20:00"",""not_after"":""21:00""}",soft,Inspirational campfire Friday about 8:30 PM.
+w1-participants-arrive,W1,lock_slot,"{""activity_id"":""registration-orientation-trail"",""day"":""2027-02-13"",""not_before"":""08:00"",""not_after"":""09:00""}",hard,Participants arrive Saturday 8:00 AM. Nothing for participants before then.
+tg-delivery,,delivery,"{""delivery"":""TG"",""disallow_all_hands"":true}",soft,TG/patrol modules (Communicating 2-4) should not sit in a main-hall / all-hands lane without an override flag.
+syllabus-order,,syllabus_day_order,"{""events"":[""W1"",""W2""],""day_map"":{""W1"":[1,2,3],""W2"":[4,5,6]}}",soft,Presentations should not run on a course day earlier than their syllabus day.
+ready-gate,,ready_gate,"{""events"":[""W1"",""W2""],""required"":""Ready""}",soft,A presentation on the course should be marked Ready in the Authority sheet.
+practice-coverage,,practice_coverage,"{""sd_events"":[""SD1"",""SD2"",""SD3"",""SD4""]}",soft,Every syllabus presentation must be placed for practice in its assigned Practice SD.

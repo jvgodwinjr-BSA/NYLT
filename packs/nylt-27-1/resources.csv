@@ -1,0 +1,31 @@
+id,role,kind,team,sort
+CD,Course Director,role,senior,10
+ACD,Assistant Course Director,role,senior,11
+CHO,Council Rep / Camp Health Officer,role,adult,12
+SPL,Senior Patrol Leader,role,senior,20
+YCL,Youth Course Lead,role,senior,21
+ASPL-SVC,ASPL — Service,role,senior,22
+ASPL-PGM,ASPL — Program,role,senior,23
+ASPL-QM,ASPL — Quartermaster,role,qm,24
+QM-ADULT,Quartermaster (adult),role,qm,30
+QM-YOUTH,Quartermaster (youth),role,qm,31
+ASM-SVC,ASM — Service,role,adult,40
+ASM-PGM,ASM — Program,role,adult,41
+TG-1,Troop Guide 1,role,tg,50
+TG-2,Troop Guide 2,role,tg,51
+TG-3,Troop Guide 3,role,tg,52
+TG-4,Troop Guide 4,role,tg,53
+ATG-1,Assistant Troop Guide 1,role,tg,60
+ATG-2,Assistant Troop Guide 2,role,tg,61
+ATG-3,Assistant Troop Guide 3,role,tg,62
+ATG-4,Assistant Troop Guide 4,role,tg,63
+QM-1,Quartermaster Staff 1,role,qm,70
+QM-2,Quartermaster Staff 2,role,qm,71
+QM-3,Quartermaster Staff 3,role,qm,72
+QM-4,Quartermaster Staff 4,role,qm,73
+QM-5,Quartermaster Staff 5,role,qm,74
+QM-6,Quartermaster Staff 6,role,qm,75
+SCRIBE-1,Scribe 1,role,adult,80
+SCRIBE-2,Scribe 2,role,adult,81
+SCRIBE-3,Scribe 3,role,adult,82
+COOK,Cook,role,adult,90

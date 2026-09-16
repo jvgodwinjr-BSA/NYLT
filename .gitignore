@@ -1,0 +1,13 @@
+# Real names never go in the repo. See docs/DATA-MODEL.md "Roster".
+roster.local.csv
+# Source spreadsheets (contain names). Keep them in the shared Drive folder.
+source/
+*.xlsx
+# Build output and deps
+dist/
+node_modules/
+# OS / editor
+.DS_Store
+Thumbs.db
+# Extra scrub list for the importer (contains names)
+scripts/scrub.local.txt

@@ -1,0 +1,95 @@
+# Words that are ordinary English AND also common given names or surnames.
+#
+# The name guard will not flag these on their own — only as part of a full-name
+# phrase ("Jane Fields" is caught, the word "fields" is not). Without this list a
+# roster containing a surname like Lane produces dozens of false positives, because
+# "lane" is this app's core concept. A guard that cries wolf is a guard you turn off.
+#
+# This list is GENERIC and safe to commit: it is not derived from any roster, so it
+# reveals nothing about who is on one. Per-roster additions belong in the gitignored
+# scripts/scrub.local.txt, where a line starting with '-' allows one more word.
+#
+# Deliberately NOT here: given names whose name reading dominates in ordinary prose —
+# seasons, months, virtue names, times of day. Those stay flagged on their own, which is
+# what you want: the one name that ever reached this repo's git history was of that kind.
+# (This comment describes the criterion rather than listing examples, because listing them
+# would name people on the roster — the guard rejects this file if it does.)
+
+amber
+art
+banks
+bay
+bell
+best
+bill
+blue
+bond
+brooks
+brown
+bush
+chase
+cook
+day
+dean
+dell
+down
+drew
+earl
+east
+falls
+fields
+ford
+frank
+gray
+green
+grey
+guy
+hall
+hunter
+jack
+joy
+king
+lane
+long
+love
+mark
+marsh
+max
+miles
+moss
+north
+page
+park
+pat
+pike
+pond
+port
+price
+ray
+reed
+rich
+rivers
+rob
+rush
+sage
+sharp
+short
+sky
+snow
+south
+still
+stone
+swift
+vale
+ward
+way
+wells
+west
+white
+wild
+will
+winter
+wise
+wood
+woods
+young

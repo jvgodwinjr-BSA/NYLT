@@ -1,0 +1,19 @@
+id,event_id,name,is_all_hands,sort
+SD1-all,SD1,All Hands,true,1
+SD1-tg,SD1,TG & Presenters,false,2
+SD1-qm,SD1,Quartermasters,false,3
+SD2-all,SD2,All Hands,true,1
+SD2-tg,SD2,TG & Presenters,false,2
+SD2-qm,SD2,Quartermasters,false,3
+SD3-all,SD3,All Hands,true,1
+SD3-tg,SD3,TG & Presenters,false,2
+SD3-qm,SD3,Quartermasters,false,3
+SD4-all,SD4,All Hands,true,1
+SD4-tg,SD4,TG & Presenters,false,2
+SD4-qm,SD4,Quartermasters,false,3
+W1-all,W1,Troop (main hall),true,1
+W1-patrol,W1,Patrols (TG),false,2
+W1-qm,W1,Quartermasters,false,3
+W2-all,W2,Troop (main hall),true,1
+W2-patrol,W2,Patrols (TG),false,2
+W2-qm,W2,Quartermasters,false,3
