@@ -57,6 +57,7 @@ const presByName = new Map(presentations.map((p) => [lower(p.name), p]));
 // ---------- 2. Spine items from last year's Day sheets ----------
 const spine = readWorkbook(spinePath);
 const observed = new Map(); // canonical name -> { runs: [], days: Set }
+const templateDays = {}; // day number -> [{ name, start_min, duration_min }]
 const scrubInitials = (s) => norm(s).replace(/\s+-\s+[A-Z]{2,3}(\s*\(.*\))?$/, '');
 for (const sheet of spine.sheetNames.filter((n) => /^Day \d$/.test(n))) {
   const day = Number(sheet.slice(-1));
@@ -69,6 +70,7 @@ for (const sheet of spine.sheetNames.filter((n) => /^Day \d$/.test(n))) {
     if (label) blocks.push({ label, start: excelTimeToMinutes(grid[i][0]), run: 1 });
     else if (blocks.length) blocks[blocks.length - 1].run++;
   }
+  templateDays[day] = [];
   for (const b of blocks) {
     let name = scrubInitials(b.label);
     name = renameMap.get(lower(name)) ?? name;
@@ -78,6 +80,7 @@ for (const sheet of spine.sheetNames.filter((n) => /^Day \d$/.test(n))) {
     entry.runs.push(b.run * 15);
     entry.days.add(day);
     observed.set(name, entry);
+    templateDays[day].push({ name, start_min: b.start, duration_min: b.run * 15 });
   }
 }
 
@@ -138,6 +141,17 @@ if (offenders.length) { console.error('REFUSING to write pack: names found in ou
 
 const columns = ['id', 'name', 'duration_min', 'type', 'audience', 'delivery', 'group', 'syllabus_day', 'soft_vs_hard', 'practice_sd', 'owner_id', 'ready', 'location', 'tags', 'notes', 'source'];
 writeFileSync(`packs/${pack}/activities.csv`, toCsv(all, columns));
+// Templates: last year's day layouts, by activity id, so a course weekend can start from a real schedule.
+const byName = new Map(all.map((a) => [lower(a.name), a.id]));
+const templates = {};
+for (const [day, items] of Object.entries(templateDays)) {
+  templates[`26-1-day-${day}`] = {
+    label: `26-1 Day ${day}`, source: 'spine-26-1',
+    items: items.filter((i) => byName.has(lower(i.name)) && !rules.skip.some((s) => lower(s) === lower(i.name)))
+      .map((i) => ({ activity_id: byName.get(lower(i.name)), start_min: i.start_min, duration_min: rules.duration_overrides[i.name] ?? i.duration_min })),
+  };
+}
+writeFileSync(`packs/${pack}/templates.json`, JSON.stringify(templates, null, 1));
 const counts = all.reduce((m, a) => (m[a.type] = (m[a.type] ?? 0) + 1, m), {});
 console.log(`Wrote packs/${pack}/activities.csv: ${all.length} activities`, counts);
 console.log(`  ${presentations.length} presentations from Authority, ${spineItems.length} from 26-1 spine (review durations), ${extras.length} extras`);
