@@ -1,0 +1,20 @@
+* text=auto eol=lf
+
+*.js   text eol=lf
+*.mjs  text eol=lf
+*.css  text eol=lf
+*.html text eol=lf
+*.json text eol=lf
+*.md   text eol=lf
+*.csv  text eol=lf
+*.sh   text eol=lf
+
+# Encrypted roster: JSON, but diffing ciphertext is noise.
+*.enc -diff linguist-generated
+
+# Generated from the source workbooks by `npm run import-catalog`.
+packs/*/templates.json  linguist-generated
+packs/*/activities.csv  linguist-generated
+
+# Never let a spreadsheet slip in as text.
+*.xlsx binary

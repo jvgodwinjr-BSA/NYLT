@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Checks and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      # No `npm ci`: this project has zero dependencies and no lockfile, on purpose.
+      # See CONTRIBUTING.md. If an install step ever becomes necessary, something has gone wrong.
+      - name: Assert zero dependencies
+        run: |
+          node -e "const p=require('./package.json');
+            const d=Object.keys(p.dependencies||{}).length+Object.keys(p.devDependencies||{}).length;
+            if(d){console.error('Expected no dependencies, found '+d);process.exit(1)}
+            console.log('0 dependencies')"
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Validate content packs
+        run: npm run check:pack
+
+      # Structural half only — roster.local.csv and scripts/scrub.local.txt are not in CI by design.
+      # It still catches a tracked secret file, a name column, a name-shaped owner_id, or an
+      # unencrypted roster. The full name scan runs on a maintainer's machine via the pre-commit hook.
+      - name: Name guard
+        run: npm run check:names
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Verify the build output is servable
+        run: |
+          test -f dist/index.html
+          test -f dist/packs/nylt-27-1/activities.csv
+          test -f dist/public/roster.enc
+          test ! -e dist/roster.local.csv
+          test ! -e dist/source
+          echo "dist/ looks right"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 14

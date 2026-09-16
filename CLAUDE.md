@@ -1,0 +1,60 @@
+# CLAUDE.md
+
+Guidance for Claude Code working in this repository.
+
+## What this is
+
+A drag-and-drop **Program Scheduler** for multi-day programs. Catalog on the left, a 15-minute day canvas in the middle, a constraint engine that turns conflicts red, exports on the way out. The first content pack is Black Warrior Council **NYLT Course 27-1** (SD1–SD4, Course Weekend 1, Course Weekend 2). Nothing in `src/` knows about NYLT; a different program is a different folder of CSVs.
+
+## Hard rules
+
+These are not style preferences. Breaking any of them breaks something real.
+
+1. **Never commit a real person's name.** The repository and the deployed site are public and the roster is mostly minors. Names live in `roster.local.csv` (gitignored) and reach the browser only as `public/roster.enc`. `npm run check:names` enforces this; `npm run install-hooks` makes it a pre-commit gate. Git history is permanent, so a name committed once is committed forever.
+2. **Zero runtime dependencies.** No bundler, no framework, no npm packages in `dependencies`. Hostinger runs `npm install && npm run build`; with nothing to install, that step cannot fail. `scripts/build.mjs` is a file copy. CSV parsing is `src/csv.js`, xlsx reading is `scripts/xlsx.mjs`.
+3. **`src/conflicts.js` stays pure.** No DOM, no imports from `state.js` or `canvas.js`. It is `evaluate({placements, activities, events, constraints}) → Violation[]` so tests and a future PHP/Node server can call it. `npm run lint` enforces this.
+4. **Drag-and-drop only writes `Placement`** (and Quick activities). The catalog is authoritative and comes from CSV.
+5. **Times are camp-local minutes since midnight, always multiples of 15.** No `Date` arithmetic for schedule times, no timezones. `SLOT_MIN` in `src/config.js` is the one source of truth.
+6. **Never refuse a drop.** A conflicting placement lands and turns red. The tool reports; it does not overrule the person.
+
+## Layout
+
+```
+index.html  src/           the app (browser ES modules, no build step)
+  config.js                grid constants, PACK_ID
+  pack.js                  loads a content pack; computeDays() clips days to event bounds
+  state.js                 in-memory state, undo/redo, the only mutators
+  canvas.js  drag.js       rendering and all pointer-event dragging
+  conflicts.js             pure rule engine + coverage matrix
+  editor.js  catalog.js    right panel, left rail
+  roster.js                WebCrypto decrypt of roster.enc
+  export/                  run-of-show CSV, Authority-sheet sync CSV, print view
+packs/nylt-27-1/           five CSVs + templates.json — see docs/CONTENT-PACKS.md
+scripts/                   import-catalog, encrypt-roster, build, name-guard, validate-pack, lint
+docs/                      DATA-MODEL, CONTENT-PACKS, DEPLOY-HOSTINGER, YOUTH-PROTECTION
+```
+
+## Verifying
+
+```
+npm run check        # lint + pack validation + name guard + unit tests
+npm run build        # what Hostinger runs; produces dist/
+npm run dev          # http://localhost:3000
+```
+
+`npm run check` is the gate. Run it before every commit. For UI changes, also drive a real browser — Chromium is at `/opt/pw-browsers/chromium-1194/chrome-linux/chrome` and `playwright-core` can be installed in a scratch directory (never as a project dependency). Screenshots alone do not prove dragging works; script the drag and assert on the resulting block times and CSS classes.
+
+## Conventions
+
+- ES modules, 2-space indent, semicolons, single quotes.
+- Comments explain *why*, not *what*. Match the density of the surrounding file.
+- Prefer a small pure function over a new module.
+- `el()` in `src/util.js` builds DOM; do not reach for a template library.
+- Commit messages: imperative subject line, a blank line, then bullets for anything non-obvious.
+
+## Things that will bite you
+
+- Selecting a block re-renders the canvas and detaches the element. Read `getBoundingClientRect()` *before* calling `select()` (see the comment in `drag.js`).
+- `el()` ignores `null`/`false` children, but `append(...)` on an array containing `null` inserts the string "null" — filter first.
+- An all-hands lane blocks every other lane. That is the mechanism behind "at meals we are all together"; do not special-case meals.
+- `Practice SD` is blank for every presentation until the Course Director fills it in and the catalog is re-imported. An empty coverage matrix is expected, not a bug.

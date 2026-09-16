@@ -9,9 +9,10 @@ Core loop: **catalog → canvas → constraints → export.**
 No dependencies, no build tooling. Node is only used as a static file server and for the scripts.
 
 ```
-npm run dev          # http://localhost:3000
-npm test             # unit tests for the conflict engine and roster crypto
-npm run build        # copies deployable files to dist/ (what Hostinger publishes)
+npm run dev            # http://localhost:3000
+npm run check          # lint + pack validation + name guard + unit tests — the gate
+npm run build          # copies deployable files to dist/ (what Hostinger publishes)
+npm run install-hooks   # one-time: pre-commit guard so a real name cannot be committed
 ```
 
 Deploying: [docs/DEPLOY-HOSTINGER.md](docs/DEPLOY-HOSTINGER.md).
@@ -47,11 +48,33 @@ Rule for contributors: **never commit a real name in plaintext.** Git history is
 index.html, src/            the app (plain ES modules)
 packs/nylt-27-1/            content pack: activities, events, tracks, resources, constraints, templates
 public/roster.enc           encrypted names
-scripts/                    import-catalog (xlsx -> CSVs), encrypt-roster, build
-docs/                       DATA-MODEL, CONTENT-PACKS, DEPLOY-HOSTINGER
-tests/                      node:test
+scripts/                    import-catalog (xlsx -> CSVs), encrypt-roster, build,
+                            name-guard, validate-pack, lint, hooks/
+docs/                       DATA-MODEL, CONTENT-PACKS, DEPLOY-HOSTINGER, YOUTH-PROTECTION
+tests/                      node:test — conflict engine, roster crypto, guards
 ```
+
+## Documentation
+
+| | |
+|---|---|
+| [docs/YOUTH-PROTECTION.md](docs/YOUTH-PROTECTION.md) | **Read this first.** Where personal information may and may not go |
+| [docs/DATA-MODEL.md](docs/DATA-MODEL.md) | Activity, Resource, Event, Track, Placement, Constraint, and every rule |
+| [docs/CONTENT-PACKS.md](docs/CONTENT-PACKS.md) | Running a different program from the same engine |
+| [docs/DEPLOY-HOSTINGER.md](docs/DEPLOY-HOSTINGER.md) | Publishing, SSL, rotating the password, shared editing later |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Setup, the gate, how to make common changes |
+| [SECURITY.md](SECURITY.md) | Threat model, what the encryption does and does not protect |
+| [CLAUDE.md](CLAUDE.md) | Architectural invariants, for humans and for Claude Code |
+| [CHANGELOG.md](CHANGELOG.md) | What changed and when |
 
 ## Out of scope for v1
 
 Multi-user editing (see the PHP note in the deploy doc), auto-scheduling, live Band/Trello/Sheet sync, replacing the AppSheet owner/Ready workflow, mobile drag polish (mobile is for review).
+
+## License
+
+**Copyright © 2026 the owner of [github.com/jvgodwinjr-BSA](https://github.com/jvgodwinjr-BSA). All rights reserved.**
+
+This repository is public so it can be deployed and reviewed, but no license to use, copy, modify, or redistribute it is granted. If you are with another council and this would be useful to you, open an issue and ask — the answer is likely yes, it just needs to be said explicitly first.
+
+<sub>The holder is named by GitHub account rather than in full because the name guard keeps personal names out of this repository (see [docs/YOUTH-PROTECTION.md](docs/YOUTH-PROTECTION.md)). To use a full legal name here instead, append `name-guard:allow` in an HTML comment on that line.</sub>

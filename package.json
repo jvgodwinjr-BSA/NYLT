@@ -4,13 +4,25 @@
   "private": true,
   "description": "Drag-and-drop Program Scheduler: catalog -> 15-minute canvas -> constraints -> run-of-show. First content pack: Black Warrior Council NYLT 27-1.",
   "type": "module",
-  "engines": { "node": ">=18" },
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "build": "node scripts/build.mjs",
     "dev": "node server.mjs",
     "start": "node server.mjs",
+    "lint": "node scripts/lint.mjs",
+    "check:pack": "node scripts/validate-pack.mjs",
+    "check:names": "node scripts/name-guard.mjs",
+    "check": "npm run lint && npm run check:pack && npm run check:names && npm test",
     "encrypt-roster": "node scripts/encrypt-roster.mjs",
     "import-catalog": "node scripts/import-catalog.mjs",
+    "install-hooks": "node scripts/install-hooks.mjs",
     "test": "node --test tests/*.test.mjs"
+  },
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jvgodwinjr-BSA/NYLT.git"
   }
 }

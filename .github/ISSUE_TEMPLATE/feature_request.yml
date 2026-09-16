@@ -1,0 +1,36 @@
+name: Feature request
+description: Suggest something the scheduler should be able to do
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do
+      description: Describe the planning problem, not a solution. That usually leads somewhere better.
+      placeholder: When I move a presentation I want to see whether its presenter is free that whole morning.
+    validations: { required: true }
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you had in mind
+      description: Optional — how you imagine it working.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part
+      options:
+        - Canvas and dragging
+        - Catalog / left rail
+        - Conflicts and warnings
+        - Practice coverage
+        - Exports (CSV / PDF)
+        - Content pack data
+        - Another program (not NYLT)
+        - Something else
+    validations: { required: true }
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      options:
+        - label: This is about scheduling, not about replacing the Presentations Authority sheet or AppSheet

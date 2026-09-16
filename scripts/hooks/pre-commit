@@ -1,0 +1,4 @@
+#!/bin/sh
+# Installed by `npm run install-hooks`. Blocks a commit that would put a real name in the repo.
+# Skip once with:  git commit --no-verify
+exec node scripts/name-guard.mjs --staged

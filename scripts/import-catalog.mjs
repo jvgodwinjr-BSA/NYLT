@@ -125,8 +125,9 @@ for (const a of all) { if (ids.has(a.id)) throw new Error(`Duplicate id ${a.id}`
 
 const scrub = new Set();
 const scrubFile = new URL('./scrub.local.txt', import.meta.url);
-if (existsSync(scrubFile)) for (const line of readFileSync(scrubFile, 'utf8').split('\n')) { const w = lower(line); if (w && !w.startsWith('#')) scrub.add(w); }
-const common = new Set((rules.scrub_allow_common_words ?? []).map(lower));
+if (existsSync(scrubFile)) for (const line of readFileSync(scrubFile, 'utf8').split('\n')) { const w = lower(line); if (w && !w.startsWith('#') && !w.startsWith('-')) scrub.add(w); }
+const common = new Set();
+if (existsSync(scrubFile)) for (const line of readFileSync(scrubFile, 'utf8').split('\n')) { const w = lower(line); if (w.startsWith('-')) common.add(w.slice(1).trim()); }
 if (existsSync('roster.local.csv')) for (const r of parseCsv(readFileSync('roster.local.csv', 'utf8'))) {
   const toks = norm(r.name).split(/\s+/);
   if (toks.length > 1) scrub.add(lower(r.name));

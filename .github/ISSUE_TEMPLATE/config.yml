@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security or exposed personal information
+    url: https://github.com/jvgodwinjr-BSA/NYLT/security/advisories/new
+    about: Do NOT open a public issue. Report privately — see SECURITY.md.
+  - name: Course logistics, staffing, or syllabus questions
+    url: https://github.com/jvgodwinjr-BSA/NYLT/blob/main/docs/YOUTH-PROTECTION.md
+    about: This repository is only the scheduling tool. Course decisions go through the Course Director.

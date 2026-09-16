@@ -142,17 +142,7 @@
     "Staff Break",
     "Staff Break / Sleep Time"
   ],
-  "scrub_allow_common_words": [
-    "will",
-    "max",
-    "lane",
-    "crystal",
-    "amber",
-    "emerald",
-    "sam",
-    "chris"
-  ],
-  "_comment_scrub": "Names are never listed in this file. The importer refuses to write output containing any name in roster.local.csv or any word in scripts/scrub.local.txt (both gitignored). Tokens in scrub_allow_common_words are only refused as part of a full-name phrase.",
+  "_comment_scrub": "Names are never listed in this file. The importer refuses to write output containing any name in roster.local.csv or any word in scripts/scrub.local.txt (both gitignored). In scrub.local.txt, a line starting with '-' allows that word on its own, so a surname that is also a common English word is only refused as part of the full-name phrase.",
   "rename_regex": [
     [
       "^\\w+ sleepy time$",
