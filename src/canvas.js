@@ -1,7 +1,7 @@
 // Center canvas: one section per event day, lanes per track, blocks sized by duration on the 15-minute spine.
-import { PX_PER_SLOT, SLOT_MIN, GUTTER_PX, LANE_PX } from './config.js?v=3';
-import { state, currentEvent, eventPlacements, activityById, resourceLabel } from './state.js?v=3';
-import { el, clear, fmt12, fmtRange } from './util.js?v=3';
+import { PX_PER_SLOT, SLOT_MIN, GUTTER_PX, LANE_PX } from './config.js?v=4';
+import { state, currentEvent, eventPlacements, activityById, resourceLabel } from './state.js?v=4';
+import { el, clear, fmt12, fmtRange } from './util.js?v=4';
 
 export const slotsBetween = (a, b) => (b - a) / SLOT_MIN;
 export const minToY = (min, day) => slotsBetween(day.startMin, min) * PX_PER_SLOT;
@@ -27,6 +27,14 @@ export function renderCanvas(root, { violationsByPlacement = new Map() } = {}) {
   const days = state.view === 'day' ? [ev.days[Math.min(state.dayIndex, ev.days.length - 1)]] : ev.days;
   const width = GUTTER_PX + ev.tracks.length * LANE_PX;
   const placements = eventPlacements(ev.id);
+
+  if (!placements.length) {
+    const others = state.pack.events.filter((e) => e.id !== ev.id && state.placements.some((p) => p.event_id === e.id));
+    root.append(el('div.empty-event', {},
+      el('strong', {}, `Nothing scheduled in ${ev.name} yet.`),
+      el('p.muted', {}, 'Drag an activity from the left rail onto a lane below to start.'),
+      others.length ? el('p.muted', {}, `Other events do have a schedule: ${others.map((e) => e.name).join(', ')}. Switch with the picker above.`) : null));
+  }
 
   for (const day of days) {
     const height = slotsBetween(day.startMin, day.endMin) * PX_PER_SLOT;

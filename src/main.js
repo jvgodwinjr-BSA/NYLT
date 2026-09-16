@@ -1,18 +1,33 @@
-import { PACK_ID } from './config.js?v=3';
-import { loadPack } from './pack.js?v=3';
-import { state, subscribe, setEvent, setView, undo, redo, currentEvent, replaceSchedule, addPlacement, eventPlacements, select, activities } from './state.js?v=3';
-import { localStore, serializeSchedule, downloadText, pickFile } from './store/localStore.js?v=3';
-import { renderRail } from './catalog.js?v=3';
-import { renderCanvas } from './canvas.js?v=3';
-import { installDrag } from './drag.js?v=3';
-import { renderBlockEditor, showQuickActivity } from './editor.js?v=3';
-import { evaluate, byPlacement, coverageMatrix } from './conflicts.js?v=3';
-import { fetchRosterBlob, decryptRoster, cachePassword, cachedPassword, forgetRoster, cryptoAvailable } from './roster.js?v=3';
-import { createApiStore, ApiConflict, ApiUnauthorized } from './store/apiStore.js?v=3';
-import { el, clear } from './util.js?v=3';
-import { renderPrintView } from './export/printView.js?v=3';
+import { PACK_ID } from './config.js?v=4';
+import { loadPack } from './pack.js?v=4';
+import { state, subscribe, setEvent, setView, undo, redo, currentEvent, replaceSchedule, addPlacement, eventPlacements, select, activities } from './state.js?v=4';
+import { localStore, serializeSchedule, downloadText, pickFile } from './store/localStore.js?v=4';
+import { renderRail } from './catalog.js?v=4';
+import { renderCanvas } from './canvas.js?v=4';
+import { installDrag } from './drag.js?v=4';
+import { renderBlockEditor, showQuickActivity } from './editor.js?v=4';
+import { evaluate, byPlacement, coverageMatrix } from './conflicts.js?v=4';
+import { fetchRosterBlob, decryptRoster, cachePassword, cachedPassword, forgetRoster, cryptoAvailable } from './roster.js?v=4';
+import { createApiStore, ApiConflict, ApiUnauthorized } from './store/apiStore.js?v=4';
+import { el, clear } from './util.js?v=4';
+import { renderPrintView } from './export/printView.js?v=4';
 
 const $ = (s) => document.querySelector(s);
+const LAST_EVENT_KEY = (packId) => `program-scheduler:last-event:${packId}`;
+const rememberEvent = (id) => { try { localStorage.setItem(LAST_EVENT_KEY(state.pack.id), id); } catch {} };
+const recalledEvent = () => { try { return localStorage.getItem(LAST_EVENT_KEY(state.pack.id)); } catch { return null; } };
+
+// Landing on an empty event looks exactly like a failed import — which is what happened when
+// SD1, deliberately left blank, sat first in events.csv. Prefer an explicit ?event=, then the
+// one this browser last looked at, then the first event that actually has something in it.
+function chooseEvent(explicit) {
+  const has = (id) => id && state.pack.events.some((e) => e.id === id);
+  const withContent = state.pack.events.find((e) => state.placements.some((p) => p.event_id === e.id));
+  if (has(explicit)) return explicit;
+  const recalled = recalledEvent();
+  if (has(recalled) && state.placements.some((p) => p.event_id === recalled)) return recalled;
+  return withContent?.id ?? (has(recalled) ? recalled : state.pack.events[0].id);
+}
 state.panelTab = 'event';
 state.violations = [];
 state.remote = null;          // ApiStore when the site is saving for us
@@ -142,8 +157,8 @@ async function loadJson() {
     render('view');
   } catch (e) { alert(`Could not load: ${e.message}`); }
 }
-async function exportRunOfShow() { const m = await import('./export/runOfShow.js?v=3'); m.exportRunOfShowCsv(); }
-async function exportSheetSync() { const m = await import('./export/sheetSync.js?v=3'); m.exportSheetSyncCsv(); }
+async function exportRunOfShow() { const m = await import('./export/runOfShow.js?v=4'); m.exportRunOfShowCsv(); }
+async function exportSheetSync() { const m = await import('./export/sheetSync.js?v=4'); m.exportSheetSyncCsv(); }
 
 // ---------- roster gate ----------
 function showGate(blob) {
@@ -246,6 +261,7 @@ function renderPanel() {
 
 // ---------- render ----------
 export function render(what = 'all') {
+  rememberEvent(state.eventId);
   if (what === 'data') { localStore.save(state.pack.id, serializeSchedule(state)); scheduleRemoteSave(); }
   state.violations = evaluate({ placements: state.placements, activities: activities(), events: state.pack.events, constraints: state.pack.constraints });
   renderHeader();
@@ -287,7 +303,7 @@ async function init() {
   const saved = localStore.load(PACK_ID);
   if (saved) { state.placements = saved.placements ?? []; state.customActivities = saved.customActivities ?? []; }
   const q = new URLSearchParams(location.search);
-  state.eventId = state.pack.events.find((e) => e.id === q.get('event'))?.id ?? state.pack.events[0].id;
+  state.eventId = chooseEvent(q.get('event'));
   state.rosterBlob = await fetchRosterBlob();
   const cached = cachedPassword();
   if (state.rosterBlob && cached) {
@@ -295,6 +311,7 @@ async function init() {
   }
   if (state.rosterBlob && !state.roster && !q.has('nogate')) await showGate(state.rosterBlob);
   await connectToSite();
+  if (!q.get('event')) state.eventId = chooseEvent(null);
   subscribe(render);
   installDrag({ rail: $('#rail'), canvas: $('#canvas') });
   document.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); } });

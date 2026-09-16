@@ -125,3 +125,6 @@ body { font: 13px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 .conflict-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 3000; background: #fff4e5; border-bottom: 2px solid var(--soft);
   padding: 10px 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 13px; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
 .conflict-bar .btn { margin-left: 4px; }
+.empty-event { flex: none; max-width: 300px; border: 1px dashed var(--line); border-radius: 8px; padding: 14px; background: #fffdf5; }
+.empty-event strong { display: block; margin-bottom: 6px; }
+.empty-event p { margin: 6px 0 0; font-size: 12px; }
