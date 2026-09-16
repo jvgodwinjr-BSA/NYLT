@@ -26,9 +26,21 @@ const renameMap = new Map(Object.entries(rules.rename).map(([k, v]) => [lower(k)
 const slug = (s) => norm(s).toLowerCase().replace(/[—–]/g, '-').replace(/['’"“”]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 // ---------- 1. Presentations from the Authority sheet ----------
+// Read the three tabs the Course Director actually edits, not "All modules".
+// The workbook says "type once; other views follow", but it holds no formulas —
+// the four tabs are independent copies and have already drifted. "All modules" is
+// treated as a stale duplicate and only used to warn about disagreement.
+const AUTHORITY_TABS = ['Troop', 'TG Patrol', 'Flags'];
 const auth = readWorkbook(authorityPath);
-const rows = sheetRows(auth.sheets['All modules']).filter((r) => r && r[0]);
-const header = rows[0].map(norm);
+const present = AUTHORITY_TABS.filter((t) => auth.sheets[t]);
+if (!present.length) throw new Error(`Authority workbook has none of: ${AUTHORITY_TABS.join(', ')}`);
+const tabRows = present.map((t) => sheetRows(auth.sheets[t]).filter((r) => r && r[0]));
+const header = tabRows[0][0].map(norm);
+for (const [i, tr] of tabRows.entries()) {
+  const h = tr[0].map(norm).join('|');
+  if (h !== header.join('|')) throw new Error(`Tab "${present[i]}" has different columns than "${present[0]}"`);
+}
+const rows = [tabRows[0][0], ...tabRows.flatMap((tr) => tr.slice(1))];
 const col = (name) => header.indexOf(name);
 const H = { name: col('Presentation'), delivery: col('Delivery'), day: col('Syllabus day'), desc: col('Short description'),
   owner: col('Owner'), who: col("Who's required"), psd: col('Practice SD'), ready: col('Ready'), group: col('Group'),
@@ -53,6 +65,34 @@ for (const r of rows.slice(1)) {
   });
 }
 const presByName = new Map(presentations.map((p) => [lower(p.name), p]));
+console.log(`  presentations from ${present.map((t, i) => `${t} (${tabRows[i].length - 1})`).join(', ')}`);
+
+// "All modules" is a hand-maintained duplicate with no formulas behind it. Warn rather than
+// silently prefer one copy, so drift gets noticed instead of quietly deciding the import.
+if (auth.sheets['All modules']) {
+  const all = sheetRows(auth.sheets['All modules']).filter((r) => r && r[0]);
+  const ah = all[0].map(norm);
+  const col = (n) => ah.indexOf(n);
+  const drift = [];
+  const seen = new Set();
+  for (const r of all.slice(1)) {
+    const name = norm(r[col('Presentation')]);
+    seen.add(lower(name));
+    const p = presByName.get(lower(name));
+    if (!p) { drift.push(`"${name}" is on All modules but not on ${present.join('/')}`); continue; }
+    for (const [label, idx, mine] of [['Owner', col('Owner'), p.owner_id], ['Practice SD', col('Practice SD'), p.practice_sd], ['Ready', col('Ready'), p.ready]]) {
+      const theirs = norm(r[idx]);
+      if (idx >= 0 && theirs && theirs !== norm(mine)) drift.push(`"${name}" ${label}: All modules says "${theirs}", ${present.join('/')} says "${norm(mine) || '(blank)'}"`);
+    }
+  }
+  for (const p of presentations) if (!seen.has(lower(p.name))) drift.push(`"${p.name}" is missing from All modules`);
+  if (drift.length) {
+    console.warn(`  NOTE: "All modules" disagrees with the edited tabs in ${drift.length} place(s) and was ignored:`);
+    for (const d of drift.slice(0, 8)) console.warn(`    - ${d}`);
+    if (drift.length > 8) console.warn(`    ... and ${drift.length - 8} more`);
+    console.warn('    The edited tabs win. Fix "All modules" in the workbook, or stop maintaining it.');
+  }
+}
 
 // ---------- 2. Spine items from last year's Day sheets ----------
 const spine = readWorkbook(spinePath);
