@@ -29,3 +29,13 @@ Practice coverage and the Authority-sheet export are NYLT-shaped only in the sen
 `scripts/import-catalog.mjs` is the NYLT importer (Presentations Authority workbook + last year's schedule). For another program, the simplest path is to export your sheet to CSV with the columns above. `scripts/xlsx.mjs` is a zero-dependency .xlsx reader you can reuse if you would rather parse a workbook.
 
 The importer refuses to write output containing any name from `roster.local.csv` or `scripts/scrub.local.txt`. Keep that behaviour if you fork it.
+
+The `source` column records where a row came from — `authority`, `spine-26-1`, `extras`, `qm-tasks`. `scripts/extras-nylt-27-1.csv` is the hand-maintained half; a row's `source` there is carried through, and an importer that owns a source (as `import-qm-tasks.mjs` owns `qm-tasks`) rewrites only its own rows.
+
+### Scrubbing names out of hand-authored input
+
+A task list written by a human names people. `scripts/import-qm-tasks.mjs` replaces each name with the role that person holds, taking the name→role pairs from `roster.local.csv` and from `Name -> ROLE-ID` lines in `scripts/scrub.local.txt` (both gitignored). The second file is for what the roster cannot answer: a spelling the author used that the roster no longer carries, a past year's staff, a set of initials.
+
+Two things it deliberately will not do. It will not resolve a name token that two roles share — this roster has three such surnames, and guessing would file a task under the wrong person. And it will not write a row that still carries a name: it stops and prints the activity id and field, never the name, so the report is safe in a log. Both are fixed the same way, with an explicit `Name -> ROLE-ID` line.
+
+Titles are slugged into ids, so a title that named someone put that name in the id too. Those rows are re-slugged from the scrubbed title; every other id stays exactly as the author wrote it.

@@ -82,6 +82,7 @@ switch (cmd) {
       writeFileSync(SCRUB,
         '# Extra names the importer and name guard must refuse (e.g. last year\'s staff), one per line.\n'
         + '# A line starting with "-" allows that word on its own; the full-name phrase is still refused.\n'
+        + '# "Name -> ROLE-ID" also tells the importers to substitute that role wherever the name appears.\n'
         + '# Words that are ordinary English AND names are already handled by scripts/common-name-words.txt.\n');
       console.log(`Created ${SCRUB} (empty — add past staff names if you re-import the catalog).`);
     }

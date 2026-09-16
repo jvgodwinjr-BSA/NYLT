@@ -1,9 +1,9 @@
 // Pointer-event drag for the whole canvas: rail item -> canvas (create), block move, block resize. One code path.
 // Nothing here writes state until pointerup; a ghost shows where the block will land, snapped to the 15-minute grid.
-import { PX_PER_SLOT, SLOT_MIN, GUTTER_PX, LANE_PX } from './config.js?v=4';
-import { state, currentEvent, activityById, addPlacement, updatePlacement, select } from './state.js?v=4';
-import { yToMin, minToY } from './canvas.js?v=4';
-import { fmtRange } from './util.js?v=4';
+import { PX_PER_SLOT, SLOT_MIN, GUTTER_PX, LANE_PX } from './config.js?v=5';
+import { state, currentEvent, activityById, addPlacement, updatePlacement, select } from './state.js?v=5';
+import { yToMin, minToY } from './canvas.js?v=5';
+import { fmtRange } from './util.js?v=5';
 
 const DRAG_THRESHOLD = 4; // px before a press becomes a drag (so clicks still select)
 
@@ -144,7 +144,7 @@ export function installDrag({ rail, canvas, onChange }) {
     else if (e.key === 'ArrowDown') { e.preventDefault(); updatePlacement(p.id, { start_min: Math.min(day.endMin - SLOT_MIN, p.start_min + step) }); }
     else if (e.key === 'ArrowLeft' && laneIdx > 0) { e.preventDefault(); updatePlacement(p.id, { track_id: ev.tracks[laneIdx - 1].id }); }
     else if (e.key === 'ArrowRight' && laneIdx < ev.tracks.length - 1) { e.preventDefault(); updatePlacement(p.id, { track_id: ev.tracks[laneIdx + 1].id }); }
-    else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); import('./state.js?v=4').then((m) => m.removePlacement(p.id)); }
+    else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); import('./state.js?v=5').then((m) => m.removePlacement(p.id)); }
     else if (e.key === 'Escape') { select(null); }
   });
 }

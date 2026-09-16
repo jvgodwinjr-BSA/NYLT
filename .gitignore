@@ -20,3 +20,6 @@ api/data/*.json
 # source: they go in the shared Drive folder, or straight into the app with Load JSON.
 *-schedule-*.json
 *-schedule.json
+
+# Hand-authored task lists. Raw input may name people; the scrubbed output is what is committed.
+scripts/*-source.json

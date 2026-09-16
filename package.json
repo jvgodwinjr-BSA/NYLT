@@ -21,6 +21,7 @@
     "cache-bust": "node scripts/cache-bust.mjs",
     "encrypt-roster": "node scripts/encrypt-roster.mjs",
     "import-catalog": "node scripts/import-catalog.mjs",
+    "import-qm-tasks": "node scripts/import-qm-tasks.mjs",
     "install-hooks": "node scripts/install-hooks.mjs",
     "test": "node --test tests/*.test.mjs"
   },

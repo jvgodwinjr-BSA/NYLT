@@ -1,5 +1,5 @@
 // v1 persistence: localStorage on every change + explicit JSON file save/load (hand the file around via Drive).
-import { STORAGE_KEY } from '../config.js?v=4';
+import { STORAGE_KEY } from '../config.js?v=5';
 
 export const localStore = {
   load(packId) { try { const raw = localStorage.getItem(STORAGE_KEY(packId)); return raw ? JSON.parse(raw) : null; } catch { return null; } },

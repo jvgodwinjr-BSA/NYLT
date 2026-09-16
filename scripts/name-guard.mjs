@@ -37,9 +37,12 @@ const errors = [], notes = [];
 const fail = (m) => errors.push(m);
 
 // ---------- which files to scan ----------
+// The default scan covers untracked-but-not-ignored files too. A new script is untracked right up
+// until the moment it is committed, which is exactly when a name in it matters; scanning only
+// tracked files meant `npm run check` passed and the pre-commit hook then refused the commit.
 const listed = has('--files') ? argv.slice(argv.indexOf('--files') + 1)
   : has('--staged') ? git('diff', '--cached', '--name-only', '--diff-filter=ACMR').split('\n').filter(Boolean)
-  : git('ls-files').split('\n').filter(Boolean);
+  : [...git('ls-files').split('\n'), ...git('ls-files', '--others', '--exclude-standard').split('\n')].filter(Boolean);
 const files = listed.filter((f) => existsSync(f));
 
 // ---------- 1. structural ----------
@@ -90,7 +93,8 @@ if (existsSync(COMMON_WORDS)) {
 }
 if (existsSync('scripts/scrub.local.txt')) {
   for (const line of readFileSync('scripts/scrub.local.txt', 'utf8').split('\n')) {
-    const w = lower(line);
+    // "Name -> ROLE" tells the importers what to substitute; the guard only cares about the name.
+    const w = lower(line.split('->')[0]);
     if (!w || w.startsWith('#')) continue;
     w.startsWith('-') ? common.add(w.slice(1).trim()) : secrets.add(w);
   }

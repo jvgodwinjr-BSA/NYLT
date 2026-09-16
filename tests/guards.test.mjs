@@ -6,6 +6,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { validatePack } from '../scripts/validate-pack.mjs';
 import { writeFileSync as wf, mkdirSync as md, readFileSync as rf } from 'node:fs';
 
@@ -145,4 +146,89 @@ test('validate-schedule flags a bad lane, a misspelled activity, and an off-grid
     const r4 = run(badCustom);
     assert.ok(!r4.ok && /missing delivery, soft_vs_hard, tags/.test(r4.out), r4.out);
   } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+// ---------- import-qm-tasks: names out of hand-authored input ----------
+// The QM task list was written by a human and named people. These run the real importer in a
+// temp directory with a fictional roster, because the one thing that must never regress here is
+// a name reaching the pack — and the three ways it got through in review were a note, a title
+// (which the id is slugged from), and a spelling the roster no longer carried.
+const QM_IMPORTER = fileURLToPath(new URL('../scripts/import-qm-tasks.mjs', import.meta.url));
+
+function qmRun({ tasks, roster = 'id,name\nACD,Alder Birchwood\nCHO,Rowan Birchwood\nQM-ADULT,Juniper Thorne\n', scrub = '', extras = 'id,name,duration_min,type,audience,delivery,soft_vs_hard,tags,notes,source\n' }) {
+  const dir = mkdtempSync(join(tmpdir(), 'qm-'));
+  md(join(dir, 'scripts'), { recursive: true });
+  wf(join(dir, 'roster.local.csv'), roster);
+  wf(join(dir, 'scripts', 'scrub.local.txt'), scrub);
+  wf(join(dir, 'scripts', 'extras-nylt-27-1.csv'), extras);
+  wf(join(dir, 'scripts', 'qm-tasks-source.json'), JSON.stringify({ customActivities: tasks }));
+  try {
+    let stdout = '', status = 0;
+    try { stdout = execFileSync('node', [QM_IMPORTER], { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }); }
+    catch (e) { status = e.status ?? 1; stdout = (e.stdout ?? '') + (e.stderr ?? ''); }
+    return { status, stdout, csv: status === 0 ? rf(join(dir, 'scripts', 'extras-nylt-27-1.csv'), 'utf8') : '' };
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+}
+
+const QM_TASK = { id: 'qm-do-a-thing', name: 'QM: Do a thing', duration_min: 60, category: 'Gear', suggested_sd: 'SD2', notes: '' };
+
+test('a name in a note is replaced by the role that person holds', () => {
+  const { status, csv } = qmRun({ tasks: [{ ...QM_TASK, notes: 'Juniper Thorne stages the gear' }] });
+  assert.equal(status, 0);
+  assert.ok(csv.includes('the adult QM stages the gear'), csv);
+  assert.ok(!/juniper|thorne/i.test(csv), csv);
+});
+
+test('a first name followed by a surname initial swallows the initial', () => {
+  // Replacing only the first name leaves "ACD B", which still points at one of two people.
+  const { status, csv } = qmRun({ tasks: [{ ...QM_TASK, notes: 'Alder B owns this' }] });
+  assert.equal(status, 0);
+  assert.ok(csv.includes('ACD owns this'), csv);
+});
+
+test('a lowercase word after a name is left alone', () => {
+  const { status, csv } = qmRun({ tasks: [{ ...QM_TASK, notes: 'Alder a second time' }] });
+  assert.equal(status, 0);
+  assert.ok(csv.includes('ACD a second time'), csv);
+});
+
+test('a "Name -> ROLE-ID" line in scrub.local.txt is substituted', () => {
+  // The spelling the author used is not in the roster, so nothing else can resolve it.
+  const { status, csv } = qmRun({ tasks: [{ ...QM_TASK, notes: 'Ask Hazel first' }], scrub: 'Hazel -> ASPL-QM\n' });
+  assert.equal(status, 0);
+  assert.ok(csv.includes('Ask ASPL-QM first'), csv);
+});
+
+test('refuses to guess which of two people a shared surname means', () => {
+  // Birchwood is both ACD and CHO in this roster. Picking one would file the task under the
+  // wrong person silently, so the importer stops and reports the field, never the name.
+  const { status, stdout } = qmRun({ tasks: [{ ...QM_TASK, notes: 'Birchwood has the key' }] });
+  assert.equal(status, 1);
+  assert.match(stdout, /REFUSING to write/);
+  assert.match(stdout, /qm-do-a-thing\.notes/);
+  assert.ok(!/birchwood/i.test(stdout), 'the report must not print the name itself');
+});
+
+test('a name in the title is scrubbed and the id re-slugged', () => {
+  const { status, csv } = qmRun({ tasks: [{ ...QM_TASK, id: 'qm-collect-juniper-thorne-list', name: 'QM: Collect Juniper Thorne list' }] });
+  assert.equal(status, 0);
+  assert.ok(csv.includes('qm-collect-the-adult-qm-list'), csv);
+  assert.ok(!/juniper|thorne/i.test(csv), csv);
+});
+
+test('re-running replaces the qm-tasks rows instead of duplicating them', () => {
+  const extras = 'id,name,duration_min,type,audience,delivery,soft_vs_hard,tags,notes,source\n'
+    + 'qm-stale,Stale,60,staff_task,staff,Staff,soft,qm,,qm-tasks\n'
+    + 'hand-written,Kept,60,staff_task,staff,Staff,soft,,,extras\n';
+  const { status, csv } = qmRun({ tasks: [QM_TASK], extras });
+  assert.equal(status, 0);
+  assert.ok(!csv.includes('qm-stale'), 'the previous qm-tasks rows are replaced');
+  assert.ok(csv.includes('hand-written'), 'rows from another source survive');
+});
+
+test('off-grid durations are snapped to 15 minutes and reported', () => {
+  const { status, stdout, csv } = qmRun({ tasks: [{ ...QM_TASK, duration_min: 20 }] });
+  assert.equal(status, 0);
+  assert.match(stdout, /20 -> 15/);
+  assert.ok(csv.includes(',15,'), csv);
 });

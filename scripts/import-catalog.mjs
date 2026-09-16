@@ -153,7 +153,10 @@ for (const p of presentations) if (p.notes_spine) { p.notes = p.notes ? `${p.not
 const extrasPath = new URL(`./extras-${pack}.csv`, import.meta.url);
 const extras = existsSync(extrasPath) ? parseCsv(readFileSync(extrasPath, 'utf8')).map((e) => ({
   id: e.id, name: e.name, duration_min: Number(e.duration_min), type: e.type, audience: e.audience, delivery: e.delivery, group: '',
-  syllabus_day: '', soft_vs_hard: e.soft_vs_hard, practice_sd: '', owner_id: '', ready: '', location: '', tags: e.tags, notes: e.notes, source: 'extras',
+  syllabus_day: '', soft_vs_hard: e.soft_vs_hard, practice_sd: '', owner_id: '', ready: '', location: '', tags: e.tags, notes: e.notes,
+  // Extras carry their own provenance when they have one, so a row's origin stays visible in
+  // activities.csv — qm-tasks came from scripts/qm-tasks-source.json, not from a workbook.
+  source: e.source || 'extras',
 })) : [];
 
 // ---------- 4. Assemble, scrub, write ----------
@@ -165,11 +168,11 @@ for (const a of all) { if (ids.has(a.id)) throw new Error(`Duplicate id ${a.id}`
 
 const scrub = new Set();
 const scrubFile = new URL('./scrub.local.txt', import.meta.url);
-if (existsSync(scrubFile)) for (const line of readFileSync(scrubFile, 'utf8').split('\n')) { const w = lower(line); if (w && !w.startsWith('#') && !w.startsWith('-')) scrub.add(w); }
+if (existsSync(scrubFile)) for (const line of readFileSync(scrubFile, 'utf8').split('\n')) { const w = lower(line.split('->')[0]); if (w && !w.startsWith('#') && !w.startsWith('-')) scrub.add(w); }
 const common = new Set();
 const commonWords = new URL('./common-name-words.txt', import.meta.url);
 if (existsSync(commonWords)) for (const line of readFileSync(commonWords, 'utf8').split('\n')) { const w = lower(line); if (w && !w.startsWith('#')) common.add(w); }
-if (existsSync(scrubFile)) for (const line of readFileSync(scrubFile, 'utf8').split('\n')) { const w = lower(line); if (w.startsWith('-')) common.add(w.slice(1).trim()); }
+if (existsSync(scrubFile)) for (const line of readFileSync(scrubFile, 'utf8').split('\n')) { const w = lower(line.split('->')[0]); if (w.startsWith('-')) common.add(w.slice(1).trim()); }
 if (existsSync('roster.local.csv')) for (const r of parseCsv(readFileSync('roster.local.csv', 'utf8'))) {
   const toks = norm(r.name).split(/\s+/);
   if (toks.length > 1) scrub.add(lower(r.name));

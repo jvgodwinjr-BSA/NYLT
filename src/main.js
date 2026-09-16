@@ -1,16 +1,16 @@
-import { PACK_ID } from './config.js?v=4';
-import { loadPack } from './pack.js?v=4';
-import { state, subscribe, setEvent, setView, undo, redo, currentEvent, replaceSchedule, addPlacement, eventPlacements, select, activities } from './state.js?v=4';
-import { localStore, serializeSchedule, downloadText, pickFile } from './store/localStore.js?v=4';
-import { renderRail } from './catalog.js?v=4';
-import { renderCanvas } from './canvas.js?v=4';
-import { installDrag } from './drag.js?v=4';
-import { renderBlockEditor, showQuickActivity } from './editor.js?v=4';
-import { evaluate, byPlacement, coverageMatrix } from './conflicts.js?v=4';
-import { fetchRosterBlob, decryptRoster, cachePassword, cachedPassword, forgetRoster, cryptoAvailable } from './roster.js?v=4';
-import { createApiStore, ApiConflict, ApiUnauthorized } from './store/apiStore.js?v=4';
-import { el, clear } from './util.js?v=4';
-import { renderPrintView } from './export/printView.js?v=4';
+import { PACK_ID } from './config.js?v=5';
+import { loadPack } from './pack.js?v=5';
+import { state, subscribe, setEvent, setView, undo, redo, currentEvent, replaceSchedule, addPlacement, eventPlacements, select, activities } from './state.js?v=5';
+import { localStore, serializeSchedule, downloadText, pickFile } from './store/localStore.js?v=5';
+import { renderRail } from './catalog.js?v=5';
+import { renderCanvas } from './canvas.js?v=5';
+import { installDrag } from './drag.js?v=5';
+import { renderBlockEditor, showQuickActivity } from './editor.js?v=5';
+import { evaluate, byPlacement, coverageMatrix } from './conflicts.js?v=5';
+import { fetchRosterBlob, decryptRoster, cachePassword, cachedPassword, forgetRoster, cryptoAvailable } from './roster.js?v=5';
+import { createApiStore, ApiConflict, ApiUnauthorized } from './store/apiStore.js?v=5';
+import { el, clear } from './util.js?v=5';
+import { renderPrintView } from './export/printView.js?v=5';
 
 const $ = (s) => document.querySelector(s);
 const LAST_EVENT_KEY = (packId) => `program-scheduler:last-event:${packId}`;
@@ -157,8 +157,8 @@ async function loadJson() {
     render('view');
   } catch (e) { alert(`Could not load: ${e.message}`); }
 }
-async function exportRunOfShow() { const m = await import('./export/runOfShow.js?v=4'); m.exportRunOfShowCsv(); }
-async function exportSheetSync() { const m = await import('./export/sheetSync.js?v=4'); m.exportSheetSyncCsv(); }
+async function exportRunOfShow() { const m = await import('./export/runOfShow.js?v=5'); m.exportRunOfShowCsv(); }
+async function exportSheetSync() { const m = await import('./export/sheetSync.js?v=5'); m.exportSheetSyncCsv(); }
 
 // ---------- roster gate ----------
 function showGate(blob) {

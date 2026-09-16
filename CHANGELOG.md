@@ -4,7 +4,16 @@ Notable changes to the Program Scheduler. Format follows [Keep a Changelog](http
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+- **124 Quartermaster tasks in the catalog**, tagged `qm` plus a category and a suggested SD, so the rail's search surfaces the QM work for a weekend. `npm run import-qm-tasks` converts `scripts/qm-tasks-source.json` into extras rows; `npm run import-catalog` folds them into the pack. The pack now holds 213 activities.
+- Extras rows carry their own `source`, so a row's origin stays visible in `activities.csv`.
+
+### Notes
+- They arrived as a schedule file of `customActivities` with `"placements": []`. Loading that would have **replaced the live 148-placement schedule with nothing**, because Load JSON replaces rather than merges. Catalog belongs in the pack; the schedule was never touched.
+- Three notes and two titles named individual staff and now read as roles — durable across courses, and the only form the name guard permits. The two titles were re-slugged, since the ids were slugs of them.
+- `scripts/scrub.local.txt` (gitignored) gained a `Name -> ROLE-ID` form: the guard still refuses the name, and the importers now know what to put in its place. `import-qm-tasks` refuses to write a row that still carries a name, and refuses to guess when a surname belongs to two people — this roster has three such surnames.
+- Seven tasks were written at 20 minutes and snapped to 15. Each is named in the importer's output.
+- `qm-make-monkey-fists` and `qm-laser-etch-patches-and-staves` existed as custom activities in the live schedule and would have rendered twice in the rail; removed from the schedule now that the pack owns them. Placements reference ids and carry their own durations, so none moved.
 
 ## [0.2.0] — 2026-09-16
 

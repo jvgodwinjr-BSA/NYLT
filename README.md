@@ -28,6 +28,7 @@ npm run install-hooks    # one-time: pre-commit guard against committing a real 
 | `npm run roster -- <cmd>` | Manage names: `pull`, `push`, `list`, `show`, `set`, `unset`, `check`. |
 | `npm run api-password` | Regenerate `api/config.php` after a password change. |
 | `npm run import-catalog` | Rebuild `activities.csv` from the source workbooks in `source/`. |
+| `npm run import-qm-tasks` | Convert `scripts/qm-tasks-source.json` into extras rows, then re-run `import-catalog`. |
 | `npm run cache-bust` | Move every app URL to a new cache key. Only when a CDN edge goes stale. |
 | `npm test` | Unit tests. |
 

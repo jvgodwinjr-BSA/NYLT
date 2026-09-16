@@ -1,5 +1,5 @@
 // Encrypted roster: id -> display name. Decrypted in the browser with WebCrypto; never written to disk or the network.
-import { ASSET_V } from './config.js?v=4';
+import { ASSET_V } from './config.js?v=5';
 
 const ROSTER_URL = `./public/roster.enc?v=${ASSET_V}`;
 // The shared password is cached, not the decrypted roster: one secret in storage instead of
