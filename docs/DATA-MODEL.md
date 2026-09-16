@@ -48,10 +48,29 @@ Every event declares its lanes in `tracks.csv`. A lane with `is_all_hands=true` 
 
 `start_min` is minutes since midnight, always a multiple of 15. `duration_min` defaults from the activity and can be overridden per placement. `resource_ids` pre-fills from the activity's `owner_id`. Flags: `override` silences the TG-delivery warning; `overlap-ok` silences the lane-overlap rule for that block.
 
-Saved schedule file (`Save JSON`):
+**Flags** on a placement:
+
+| Flag | Effect |
+|---|---|
+| `override` | Silences `delivery_mismatch` — this TG module is in the main hall on purpose |
+| `overlap-ok` | Silences `track_overlap` for this block — deliberate parallel work, e.g. QM cleanup during closeouts |
+| `practice` | Marks a rehearsal placement on an SD weekend. Carried in exports; no rule reads it |
+
+## The saved schedule document
+
+The same shape whether it came from **Save JSON** or from the server:
+
 ```json
-{ "format": "program-scheduler/schedule", "version": 1, "pack": "nylt-27-1", "savedAt": "...", "placements": [...], "customActivities": [...] }
+{ "format": "program-scheduler/schedule", "version": 17, "pack": "nylt-27-1",
+  "savedAt": "2026-09-16T03:38:33+00:00", "savedBy": "ACD",
+  "placements": [...], "customActivities": [...] }
 ```
+
+`version` is what makes shared editing safe. Every server write increments it, and a `PUT` carrying a stale version is rejected with **409** plus the current document, rather than overwriting someone else's work. `savedBy` is a free-text label, trimmed to 40 characters, purely so a person can tell where a change came from. Use a role id rather than a name: it is stored in plain text on the server and in every exported file, and it is never used for access control.
+
+A file written by **Save JSON** may carry `version` from whenever it was exported. Loading it pushes to the server with `force`, because the person choosing a file has said plainly which copy they want.
+
+`customActivities` are Quick activities: they live in the schedule, not the pack, and are never written back to the Authority sheet. They must carry the same fields a pack activity does — `id, name, duration_min, type, audience, delivery, soft_vs_hard, tags` — or the left rail cannot render them. `npm run check:schedule` enforces that.
 
 ## Constraint — `constraints.csv`, `params` is JSON
 
@@ -67,6 +86,18 @@ Saved schedule file (`Save JSON`):
 | `practice_coverage` | `{sd_events:["SD1","SD2","SD3","SD4"]}` | soft, quiet | every presentation placed in its assigned Practice SD; unassigned flagged |
 
 **Quiet** violations appear in the Issues panel but do not paint blocks (readiness and coverage would otherwise turn every block amber). The engine is `src/conflicts.js`: a pure function `evaluate({placements, activities, events, constraints}) → Violation[]`, covered by `tests/conflicts.test.mjs`.
+
+## Where the schedule is stored
+
+`api/placements.php` holds one JSON document per pack in `api/data/`, which is gitignored and blocked from direct fetch. Both `GET` and `PUT` require the shared password in the `X-Schedule-Password` header; the server keeps only a PBKDF2-SHA256 hash of it in `api/config.php`.
+
+The browser uses `src/store/apiStore.js` and falls back to `src/store/localStore.js` when the API is absent, unreachable, or no password was entered — so the app still works, it just is not shared, and the header says `browser only`. `?local=1` forces that deliberately.
+
+Writes are debounced ~1.2s after the last change. A poll every 20s adopts a newer server version, but only when the local browser has nothing unsaved.
+
+## Which event opens
+
+Landing on an empty event looks identical to a failed load, so the choice is deliberate: an explicit `?event=` wins, then the event this browser last viewed if it still has content, then the first event that has any placements, then the first event in the pack. The last viewed event is remembered in `localStorage` per pack.
 
 ## Roster (names)
 

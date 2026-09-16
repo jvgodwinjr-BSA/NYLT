@@ -5,7 +5,7 @@ The app is static files (HTML, ES modules, CSV, one encrypted JSON). Hostinger's
 ## First time
 
 1. **hPanel → Websites → your site → Import website → GitHub** (on some plans this is **Advanced → Git**). Connect `jvgodwinjr-BSA/NYLT`.
-2. **Branch:** the work is on `claude/sweet-goodall-x0tmop`. Point Hostinger at that branch to preview it, or merge to `main` and deploy `main`. Hostinger deploys one branch.
+2. **Branch:** deploy **`main`**. Work happens on a feature branch and reaches the site only once merged, so the live site always reflects reviewed, CI-green code. Hostinger deploys one branch.
 3. If asked for build settings: build command `npm run build`, output/publish directory `dist`. Hostinger usually detects `dist` on its own. Node version: 18 or newer.
 4. **SSL:** turn on the free certificate (hPanel → Security → SSL). **HTTPS is required** — the browser only exposes WebCrypto, which decrypts the roster, on secure origins.
 5. Open the site. You should see the password gate; enter the shared password to see names, or continue without.
@@ -16,7 +16,27 @@ hPanel → **Security → Password Protect Directories** on the site root. That 
 
 ## Updating
 
-Push to the deployed branch; Hostinger rebuilds. If auto-deploy is off, press **Deploy** in the Git panel.
+Merge to `main` and push; Hostinger redeploys. If auto-deploy is off, press **Deploy** in the Git panel.
+
+## Caching — read this before concluding a push did not work
+
+Hostinger fronts the site with a CDN and, by default, served JavaScript with `Cache-Control: public, max-age=604800` — a week. A pushed fix would not reach anyone already running the old copy.
+
+The committed root `.htaccess` replaces that with `no-cache, must-revalidate` for html/js/css/csv/json, `no-store` for PHP and the roster, and a day for images. It applies to anything fetched from then on, but **cannot evict what the CDN already stored**.
+
+**To flush:** Hostinger dashboard → Websites → **Dashboard** next to the site → **Performance → CDN** → **Flush cache**. Effective within seconds. Do not click *Disable* — that turns the CDN off and rewrites DNS.
+
+**To check whether a file is stale**, every response carries Hostinger's own header:
+
+```
+curl -sSD- -o/dev/null https://YOUR-SITE/src/main.js | grep -iE 'cache-control|x-hcdn'
+```
+
+`HIT` with `max-age=604800` is the old policy still cached; `MISS` or `no-cache` is current.
+
+**If flushing is not enough**, `npm run cache-bust` moves every module URL, stylesheet and runtime fetch to a `?v=` the CDN has never seen. It must be all of them at once — see rule 7 in [CLAUDE.md](../CLAUDE.md).
+
+Note the LiteSpeed **Cache Manager** in hPanel is a *separate* cache from the CDN; clearing one does not clear the other. Stale page text points at Cache Manager, stale behaviour at the CDN.
 
 ## If the importer misbehaves
 

@@ -1,6 +1,6 @@
 {
   "name": "nylt-program-scheduler",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Drag-and-drop Program Scheduler: catalog -> 15-minute canvas -> constraints -> run-of-show. First content pack: Black Warrior Council NYLT 27-1.",
   "type": "module",

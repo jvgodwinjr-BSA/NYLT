@@ -16,6 +16,8 @@ These are not style preferences. Breaking any of them breaks something real.
 4. **Drag-and-drop only writes `Placement`** (and Quick activities). The catalog is authoritative and comes from CSV.
 5. **Times are camp-local minutes since midnight, always multiples of 15.** No `Date` arithmetic for schedule times, no timezones. `SLOT_MIN` in `src/config.js` is the one source of truth.
 6. **Never refuse a drop.** A conflicting placement lands and turns red. The tool reports; it does not overrule the person.
+7. **Bust the cache as a whole graph or not at all.** The app is unbundled ES modules with no content hashing. A new `main.js` importing a CDN-stale `roster.js` fails with "does not provide an export named …" and the app does not start — worse than uniformly stale. `npm run cache-bust` moves every import, stylesheet and runtime fetch to the same `?v=` together, and updates `ASSET_V` in `config.js` for URLs built at run time. Never hand-edit one.
+8. **Never open on an empty view.** An empty canvas is indistinguishable from a failed load, and was reported as exactly that. The app picks an event that has content and says so when one does not.
 
 ## Layout
 
@@ -39,9 +41,10 @@ docs/                      DATA-MODEL, CONTENT-PACKS, DEPLOY-HOSTINGER, YOUTH-PR
 ## Verifying
 
 ```
-npm run check        # lint + pack validation + name guard + unit tests
-npm run build        # what Hostinger runs; produces dist/
-npm run dev          # http://localhost:3000
+npm run check                     # lint + pack validation + name guard + unit tests
+npm run build                     # produces dist/
+npm run dev                       # http://localhost:3000
+npm run check:schedule -- <file>  # validate a saved schedule against the pack
 ```
 
 `npm run check` is the gate. Run it before every commit. For UI changes, also drive a real browser — Chromium is at `/opt/pw-browsers/chromium-1194/chrome-linux/chrome` and `playwright-core` can be installed in a scratch directory (never as a project dependency). Screenshots alone do not prove dragging works; script the drag and assert on the resulting block times and CSS classes.
@@ -63,3 +66,6 @@ npm run dev          # http://localhost:3000
 - The schedule is stored on the website, not the browser. `localStore` is only the offline fallback. A save carries the version it was based on; the server refuses a stale one with 409 rather than clobbering, and the client shows a conflict banner. Do not "simplify" that away.
 - The Authority workbook has no formulas: Troop / TG Patrol / Flags / All modules are four independent copies. The importer reads the first three and warns about drift in the fourth.
 - `Practice SD` is blank for every presentation until the Course Director fills it in and the catalog is re-imported. An empty coverage matrix is expected, not a bug.
+- Hostinger's CDN caches static files for a week by default. The committed `.htaccess` overrides that with `no-cache, must-revalidate`, but it cannot evict what is already stored — flushing is a button in their dashboard. `x-hcdn-cache-status` on any response says whether an edge is serving a cached copy.
+- Deploys are from `main`, and a git-pull-style sync leaves `api/data/` (the live shared schedule) alone. Verify that still holds if the deploy method ever changes.
+- Before handing over a schedule file, run `npm run check:schedule`. Eyeballing it missed a closing event and a dismissal stacked in the same slot.

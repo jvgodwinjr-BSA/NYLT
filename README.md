@@ -9,13 +9,29 @@ Core loop: **catalog → canvas → constraints → export.**
 No dependencies, no build tooling. Node is only used as a static file server and for the scripts.
 
 ```
-npm run dev            # http://localhost:3000
-npm run check          # lint + pack validation + name guard + unit tests — the gate
-npm run build          # copies deployable files to dist/ (what Hostinger publishes)
-npm run install-hooks   # one-time: pre-commit guard so a real name cannot be committed
+npm run dev              # http://localhost:3000
+npm run check            # the gate: lint + pack validation + name guard + tests
+npm run build            # copies deployable files to dist/
+npm run install-hooks    # one-time: pre-commit guard against committing a real name
 ```
 
-Deploying: [docs/DEPLOY-HOSTINGER.md](docs/DEPLOY-HOSTINGER.md).
+### Every command
+
+| Command | Does |
+|---|---|
+| `npm run dev` | Serve the app at http://localhost:3000. Names work here without HTTPS — localhost is a secure origin. |
+| `npm run check` | The gate. Run before every commit. |
+| `npm run check:pack` | Referential integrity across the pack CSVs. |
+| `npm run check:names` | Nothing name-shaped is committed. |
+| `npm run check:schedule -- <file>` | Validate a saved schedule against the pack **before** importing it. |
+| `npm run build` | Static build into `dist/`. |
+| `npm run roster -- <cmd>` | Manage names: `pull`, `push`, `list`, `show`, `set`, `unset`, `check`. |
+| `npm run api-password` | Regenerate `api/config.php` after a password change. |
+| `npm run import-catalog` | Rebuild `activities.csv` from the source workbooks in `source/`. |
+| `npm run cache-bust` | Move every app URL to a new cache key. Only when a CDN edge goes stale. |
+| `npm test` | Unit tests. |
+
+Deploying: [docs/DEPLOY-HOSTINGER.md](docs/DEPLOY-HOSTINGER.md). Something wrong: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 
 ## Using it
 
@@ -25,6 +41,7 @@ Deploying: [docs/DEPLOY-HOSTINGER.md](docs/DEPLOY-HOSTINGER.md).
 4. **All Hands** lanes span every other lane — meals, Gilwell, campfires. **TG & Presenters** and **Quartermasters** lanes run in parallel.
 5. Red = hard conflict (someone double-booked, two things in one lane, outside the event's hours, a locked slot violated). Amber = worth a look (a TG module in the main hall, a presentation out of syllabus order). The **Issues** panel lists them; click one to jump to it.
 6. **Practice coverage** shows every syllabus presentation against SD1–SD4: ✓ placed in its assigned Practice SD, ✗ assigned but not placed, ? no Practice SD assigned yet.
+6a. The app opens on an event that has something in it, and remembers the last one you looked at. An empty event says so rather than showing a silent blank grid.
 7. **Start from last year** (Event panel) copies one of the 26-1 day layouts onto a day as a starting point.
 8. **+ Quick activity** adds something that is not in the catalog — SD-weekend staff tasks, for example.
 9. **Export ▾**: run-of-show CSV, an Authority-sheet-shaped CSV (Practice SD and Practice date/time filled in), or Print / Save as PDF for one table per day.
@@ -96,6 +113,7 @@ tests/                      node:test — conflict engine, roster crypto, guards
 | [docs/DEPLOY-HOSTINGER.md](docs/DEPLOY-HOSTINGER.md) | Publishing, SSL, rotating the password, shared editing later |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Setup, the gate, how to make common changes |
 | [SECURITY.md](SECURITY.md) | Threat model, what the encryption does and does not protect |
+| [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Blank schedule, stale cache, names not showing, import failures |
 | [CLAUDE.md](CLAUDE.md) | Architectural invariants, for humans and for Claude Code |
 | [CHANGELOG.md](CHANGELOG.md) | What changed and when |
 

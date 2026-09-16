@@ -52,6 +52,9 @@ For anything touching the canvas, drag, or editor, also exercise it in a real br
 | Re-import after the Authority sheet changes | Put the workbooks in `source/` (gitignored), run `npm run import-catalog` |
 | Add or rename a staff person | Add the **role** to `resources.csv`, then `npm run roster -- set <id> "<name>"` — it re-encrypts under the same password |
 | Support a different program | New folder under `packs/` — see [docs/CONTENT-PACKS.md](docs/CONTENT-PACKS.md) |
+| Import a hand-authored schedule | `npm run check:schedule -- <file>` first — it catches bad lane ids, unknown activities and off-grid times before they reach anyone |
+| Change the shared password | `npm run roster -- push` and `npm run api-password`, then commit `public/roster.enc` and `api/config.php` |
+| Force browsers past a stale CDN copy | `npm run cache-bust`, then commit and push. See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) |
 
 ## Code conventions
 
@@ -62,6 +65,10 @@ There is no `package-lock.json` because there are no dependencies. If you ever a
 ## Pull requests
 
 Branch off, keep the change focused, make sure `npm run check` passes, and fill in the PR template. Say what you verified and how — "ran `npm run check`" plus, for UI work, what you actually clicked or dragged.
+
+## When something looks broken
+
+[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) covers the failures that have actually happened here — a blank canvas that was the wrong event, a CDN serving week-old JavaScript, a schedule saving to one browser instead of the site. Check it before filing anything.
 
 ## Reporting a problem
 
