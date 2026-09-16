@@ -10,7 +10,7 @@ A drag-and-drop **Program Scheduler** for multi-day programs. Catalog on the lef
 
 These are not style preferences. Breaking any of them breaks something real.
 
-1. **Never commit a real person's name.** The repository and the deployed site are public and the roster is mostly minors. Names live in `roster.local.csv` (gitignored) and reach the browser only as `public/roster.enc`. `npm run check:names` enforces this; `npm run install-hooks` makes it a pre-commit gate. Git history is permanent, so a name committed once is committed forever.
+1. **Never read or print the roster; use `npm run roster`.** `roster.local.csv` holds youth names, and anything an agent reads lands in a transcript. `npm run roster -- list` and `-- check` report coverage without names; `-- set <id> "<name>"` renames one person and re-encrypts. `.claude/settings.json` denies reading the file directly. Never commit a real person's name. The repository and the deployed site are public and the roster is mostly minors. Names live in `roster.local.csv` (gitignored) and reach the browser only as `public/roster.enc`. `npm run check:names` enforces this; `npm run install-hooks` makes it a pre-commit gate. Git history is permanent, so a name committed once is committed forever.
 2. **Zero runtime dependencies.** No bundler, no framework, no npm packages in `dependencies`. Hostinger runs `npm install && npm run build`; with nothing to install, that step cannot fail. `scripts/build.mjs` is a file copy. CSV parsing is `src/csv.js`, xlsx reading is `scripts/xlsx.mjs`.
 3. **`src/conflicts.js` stays pure.** No DOM, no imports from `state.js` or `canvas.js`. It is `evaluate({placements, activities, events, constraints}) → Violation[]` so tests and a future PHP/Node server can call it. `npm run lint` enforces this.
 4. **Drag-and-drop only writes `Placement`** (and Quick activities). The catalog is authoritative and comes from CSV.
@@ -57,4 +57,5 @@ npm run dev          # http://localhost:3000
 - Selecting a block re-renders the canvas and detaches the element. Read `getBoundingClientRect()` *before* calling `select()` (see the comment in `drag.js`).
 - `el()` ignores `null`/`false` children, but `append(...)` on an array containing `null` inserts the string "null" — filter first.
 - An all-hands lane blocks every other lane. That is the mechanism behind "at meals we are all together"; do not special-case meals.
+- Several roster surnames are ordinary English words (Lane is the worst — "lane" is the app's core concept). `scripts/common-name-words.txt` is a generic, committed allowlist that stops ~80 false positives; per-roster additions are `-word` lines in the gitignored `scripts/scrub.local.txt`. Never move that generic list's contents into a roster-derived list — that leaks the names it protects.
 - `Practice SD` is blank for every presentation until the Course Director fills it in and the catalog is re-imported. An empty coverage matrix is expected, not a bug.

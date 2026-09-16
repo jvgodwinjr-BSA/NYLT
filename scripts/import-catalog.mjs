@@ -127,6 +127,8 @@ const scrub = new Set();
 const scrubFile = new URL('./scrub.local.txt', import.meta.url);
 if (existsSync(scrubFile)) for (const line of readFileSync(scrubFile, 'utf8').split('\n')) { const w = lower(line); if (w && !w.startsWith('#') && !w.startsWith('-')) scrub.add(w); }
 const common = new Set();
+const commonWords = new URL('./common-name-words.txt', import.meta.url);
+if (existsSync(commonWords)) for (const line of readFileSync(commonWords, 'utf8').split('\n')) { const w = lower(line); if (w && !w.startsWith('#')) common.add(w); }
 if (existsSync(scrubFile)) for (const line of readFileSync(scrubFile, 'utf8').split('\n')) { const w = lower(line); if (w.startsWith('-')) common.add(w.slice(1).trim()); }
 if (existsSync('roster.local.csv')) for (const r of parseCsv(readFileSync('roster.local.csv', 'utf8'))) {
   const toks = norm(r.name).split(/\s+/);

@@ -35,12 +35,25 @@ The schedule autosaves in your browser. **Save JSON** writes a file you can drop
 
 The repository and the site are public, so committed files contain **roles only** (`TG-1`, `QM-ADULT`, `SPL`). Real names live in `roster.local.csv` (gitignored) and ship as `public/roster.enc`, encrypted with the shared password. Enter it once per device to see names; without it everything works with role codes.
 
+## Managing names
+
+Never open `roster.local.csv` by hand and never read it into an agent's context. Everything goes through one command, which does its job without displaying a name unless you explicitly ask:
+
 ```
-npm run encrypt-roster                 # prompts for the password
-npm run encrypt-roster -- --generate   # invents a passphrase and prints it
+npm run roster -- pull                       # new machine: decrypt roster.enc -> roster.local.csv
+npm run roster -- list                       # who is named, who is missing — NO names printed
+npm run roster -- set ASPL-QM "Jane Doe"     # set or rename one person, then re-encrypt
+npm run roster -- unset TG-4                 # clear one person
+npm run roster -- check                      # roles all named, and roster.enc is not stale
+npm run roster -- push                       # re-encrypt after hand-editing the CSV
+npm run roster -- show                       # ids AND names — asks you to confirm first
 ```
 
-Rule for contributors: **never commit a real name in plaintext.** Git history is permanent. The importer refuses to write output containing a roster name.
+`set`, `unset` and `push` re-encrypt with the **same** password, so nobody needs a new one. Commit `public/roster.enc` and push; Hostinger redeploys. Viewers should hard-refresh, because the browser caches the decrypted roster in `sessionStorage` for the tab.
+
+The password comes from a hidden prompt, `ROSTER_PASSWORD`, or `--password`.
+
+Rule for contributors: **never commit a real name in plaintext.** Git history is permanent. `npm run check:names` enforces it, and `npm run install-hooks` makes it a pre-commit gate.
 
 ## Layout
 

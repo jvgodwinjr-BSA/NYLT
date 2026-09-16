@@ -16,12 +16,17 @@
       "Bash(git log*)",
       "Bash(git show*)",
       "Bash(git ls-files*)",
-      "Bash(git branch*)"
+      "Bash(git branch*)",
+      "Bash(npm run roster -- list)",
+      "Bash(npm run roster -- check)",
+      "Bash(npm run roster -- set:*)",
+      "Bash(npm run roster)"
     ],
     "deny": [
       "Read(./roster.local.csv)",
       "Read(./scripts/scrub.local.txt)",
-      "Read(./source/**)"
+      "Read(./source/**)",
+      "Bash(npm run roster -- show:*)"
     ]
   }
 }

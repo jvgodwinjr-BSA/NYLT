@@ -15,6 +15,7 @@
     "check:pack": "node scripts/validate-pack.mjs",
     "check:names": "node scripts/name-guard.mjs",
     "check": "npm run lint && npm run check:pack && npm run check:names && npm test",
+    "roster": "node scripts/roster.mjs",
     "encrypt-roster": "node scripts/encrypt-roster.mjs",
     "import-catalog": "node scripts/import-catalog.mjs",
     "install-hooks": "node scripts/install-hooks.mjs",

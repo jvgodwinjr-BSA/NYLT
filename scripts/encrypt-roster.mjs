@@ -36,7 +36,7 @@ export function decryptRosterNode(blob, password) {
 const WORDS = 'amber basin cabin cedar cliff creek delta ember falcon field flint forest garnet glacier granite harbor hollow island juniper kestrel lantern lumen maple meadow mesa mica north orchard osprey pebble pine quarry raven ridge river saddle sage slate spruce summit tamarack thistle timber trail tundra valley walnut willow yarrow zenith'.split(' ');
 export const generatePassphrase = () => Array.from({ length: 4 }, () => WORDS[randomBytes(1)[0] % WORDS.length]).join('-') + '-' + (randomBytes(1)[0] % 90 + 10);
 
-function ask(question) {
+export function ask(question) {
   return new Promise((resolve) => {
     const rl = createInterface({ input: process.stdin, output: process.stdout, terminal: true });
     const write = rl._writeToOutput; let muted = false;

@@ -5,8 +5,9 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { validatePack } from '../scripts/validate-pack.mjs';
+import { writeFileSync as wf, mkdirSync as md, readFileSync as rf } from 'node:fs';
 
 const GOOD = {
   'activities.csv': 'id,name,duration_min,type,audience,delivery,group,syllabus_day,soft_vs_hard,practice_sd,owner_id,ready,location,tags,notes,source\n'
@@ -68,4 +69,34 @@ test('the real pack and the name guard both pass on this repository', () => {
   const { errors } = validatePack('packs/nylt-27-1');
   assert.deepEqual(errors, [], 'packs/nylt-27-1 must stay valid');
   execFileSync(process.execPath, ['scripts/name-guard.mjs'], { stdio: 'pipe' }); // throws on non-zero exit
+});
+
+// A surname that is also an ordinary word must not fire on its own. This is the regression that
+// made the guard unusable on a fresh clone: "lane" appears ~58 times because lanes are the core
+// concept, so without the generic allowlist a roster containing a Lane produced 80 false positives.
+test('common-name-words lets an ordinary word through alone but still catches the full name', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'guard-'));
+  try {
+    md(join(dir, 'scripts'), { recursive: true });
+    md(join(dir, 'public'), { recursive: true });
+    execFileSync('git', ['init', '-q'], { cwd: dir });
+    wf(join(dir, '.gitignore'), 'roster.local.csv\n'); // as in the real repo, so the structural check is satisfied
+    wf(join(dir, 'roster.local.csv'), 'id,name\nATG-3,Robin Lane\n');
+    wf(join(dir, 'scripts/common-name-words.txt'), rf('scripts/common-name-words.txt', 'utf8'));
+    wf(join(dir, 'doc.md'), 'Each event declares a lane. The qm lane runs in parallel.\n');
+    execFileSync('git', ['add', '-A'], { cwd: dir });
+
+    const guard = resolve('scripts/name-guard.mjs');
+    const runIn = (d) => { try { return { ok: true, out: execFileSync(process.execPath, [guard], { cwd: d, encoding: 'utf8', stdio: 'pipe' }) }; }
+      catch (e) { return { ok: false, out: String(e.stdout ?? '') + String(e.stderr ?? '') }; } };
+
+    const clean = runIn(dir);
+    assert.ok(clean.ok, `"lane" alone must not fail:\n${clean.out}`);
+
+    wf(join(dir, 'doc.md'), 'Ask Robin Lane about the qm lane.\n');
+    execFileSync('git', ['add', '-A'], { cwd: dir });
+    const caught = runIn(dir);
+    assert.ok(!caught.ok, 'the full name must still be caught');
+    assert.match(caught.out, /robin lane/i);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });

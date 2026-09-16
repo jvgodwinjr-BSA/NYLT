@@ -11,10 +11,11 @@
 //      roster.enc really is ciphertext.
 //   2. SECRET SCAN — only where roster.local.csv / scripts/scrub.local.txt exist (a maintainer's
 //      machine). Matches real names against the content. CI has neither file and says so.
-//      In scrub.local.txt a line starting with '-' allows that word on its own, for surnames that
-//      are also ordinary English words; the full-name phrase is still refused. That list lives in
-//      the gitignored file on purpose — a committed list of "words that are also names" would leak
-//      the very first names it exists to protect.
+//      Words that are ordinary English AND names come from the committed, generic
+//      scripts/common-name-words.txt; a line starting with '-' in scrub.local.txt adds one more
+//      for this roster. Either way the full-name phrase is still refused. The generic list is
+//      safe to commit because it is not derived from a roster; a list of exactly this roster's
+//      ambiguous words would leak the very names it exists to protect.
 //
 // Matched names are printed only in the secret scan, which by definition runs where the names
 // already live on disk. Nothing this script writes to stdout in CI can leak a name.
@@ -78,6 +79,15 @@ for (const enc of [...tracked].filter((f) => f.endsWith('.enc'))) {
 
 // ---------- 2. secret scan ----------
 const secrets = new Set(), common = new Set();
+// Generic, committed: words that are ordinary English AND names. Not derived from any
+// roster, so it reveals nothing. Without it a surname like Lane fires on every mention
+// of a lane, and a guard that cries wolf gets switched off.
+const COMMON_WORDS = new URL('./common-name-words.txt', import.meta.url);
+if (existsSync(COMMON_WORDS)) {
+  for (const line of readFileSync(COMMON_WORDS, 'utf8').split('\n')) {
+    const w = lower(line); if (w && !w.startsWith('#')) common.add(w);
+  }
+}
 if (existsSync('scripts/scrub.local.txt')) {
   for (const line of readFileSync('scripts/scrub.local.txt', 'utf8').split('\n')) {
     const w = lower(line);

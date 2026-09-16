@@ -5,6 +5,8 @@ Notable changes to the Program Scheduler. Format follows [Keep a Changelog](http
 ## [Unreleased]
 
 ### Added
+- `npm run roster` — one command for the roster (`pull`, `push`, `list`, `show`, `set`, `unset`, `check`). `list` and `check` report coverage without printing a name, so a name change no longer means opening a file full of youth names or pasting a multi-line `node -e` block. `set`/`unset`/`push` re-encrypt under the existing password, so nobody needs a new one.
+- `scripts/common-name-words.txt` — a generic, committed list of words that are both ordinary English and names. Without it a roster containing a surname like Lane produced 80 false positives ("lane" appears 58 times, since lanes are the core concept), which made the guard unusable on a fresh clone. Being generic rather than roster-derived, it leaks nothing.
 - `npm run check` — one gate for lint, pack validation, name guard, and unit tests.
 - `scripts/name-guard.mjs` blocks real names from reaching the repository, with a pre-commit hook (`npm run install-hooks`) and a CI fallback that needs no secrets.
 - `scripts/validate-pack.mjs` checks referential integrity across the pack CSVs.

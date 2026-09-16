@@ -27,6 +27,26 @@ Git keeps everything. Committing a name and deleting it in the next commit does 
 
 This is why the guard runs *before* the commit rather than after.
 
+## Managing names
+
+Never open `roster.local.csv` by hand and never read it into an agent's context. Everything goes through one command, which does its job without displaying a name unless you explicitly ask:
+
+```
+npm run roster -- pull                       # new machine: decrypt roster.enc -> roster.local.csv
+npm run roster -- list                       # who is named, who is missing — NO names printed
+npm run roster -- set ASPL-QM "Jane Doe"     # set or rename one person, then re-encrypt
+npm run roster -- unset TG-4                 # clear one person
+npm run roster -- check                      # roles all named, and roster.enc is not stale
+npm run roster -- push                       # re-encrypt after hand-editing the CSV
+npm run roster -- show                       # ids AND names — asks you to confirm first
+```
+
+`set`, `unset` and `push` re-encrypt with the **same** password, so nobody needs a new one. Commit `public/roster.enc` and push; Hostinger redeploys. Viewers should hard-refresh, because the browser caches the decrypted roster in `sessionStorage` for the tab.
+
+The password comes from a hidden prompt, `ROSTER_PASSWORD`, or `--password`.
+
+`list` and `check` are safe to run anywhere, including in front of someone else or inside an agent session — they report coverage without revealing who anyone is. `show` is the only command that prints names, and it makes you confirm.
+
 ## Install the guard
 
 ```

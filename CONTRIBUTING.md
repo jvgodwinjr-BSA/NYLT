@@ -23,7 +23,13 @@ npm run install-hooks
 npm run dev               # http://localhost:3000
 ```
 
-To see real names locally, create `roster.local.csv` (`id,name`, one row per role in `packs/nylt-27-1/resources.csv` — copy `roster.example.csv`) and run `npm run encrypt-roster`. That file is gitignored and must stay that way.
+To see real names locally, pull them out of the encrypted roster with the shared password:
+
+```
+npm run roster -- pull
+```
+
+That writes `roster.local.csv` (gitignored) and seeds `scripts/scrub.local.txt`, which switches the name guard from structural-only to the full name scan. Confirm with `npm run check:names` — it should report "Scanned N file(s) against M name token(s)" rather than "only the structural checks ran".
 
 ## The gate
 
@@ -44,7 +50,7 @@ For anything touching the canvas, drag, or editor, also exercise it in a real br
 | Add or rename a lane | Edit `packs/nylt-27-1/tracks.csv` |
 | Add a scheduling rule | Add a row to `constraints.csv`; if it needs a new `rule_type`, implement it in `src/conflicts.js` and add a test |
 | Re-import after the Authority sheet changes | Put the workbooks in `source/` (gitignored), run `npm run import-catalog` |
-| Add a staff person | Add a **role** to `resources.csv` and the matching name to `roster.local.csv`, then `npm run encrypt-roster` |
+| Add or rename a staff person | Add the **role** to `resources.csv`, then `npm run roster -- set <id> "<name>"` — it re-encrypts under the same password |
 | Support a different program | New folder under `packs/` — see [docs/CONTENT-PACKS.md](docs/CONTENT-PACKS.md) |
 
 ## Code conventions
