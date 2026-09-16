@@ -1,3 +1,14 @@
-/* Print stylesheet placeholder; the run-of-show print view lands in Step 6. */
-#top, .rail, .panel { display: none !important; }
-body { display: block; background: #fff; }
+/* Print: show only #print-view (tables per day). Screen: it stays hidden (see styles.css). */
+@page { margin: 14mm; }
+body { display: block !important; background: #fff !important; color: #000; font: 11pt/1.3 system-ui, sans-serif; }
+#top, .rail, .canvas, .panel, .gate { display: none !important; }
+#print-view { display: block !important; }
+#print-view h1 { font-size: 18pt; margin: 0 0 4pt; }
+#print-view h2 { font-size: 13pt; margin: 14pt 0 4pt; page-break-after: avoid; }
+#print-view .muted { color: #555; font-size: 9pt; }
+.ros { width: 100%; border-collapse: collapse; page-break-inside: auto; }
+.ros th, .ros td { border: 1px solid #999; padding: 2pt 4pt; text-align: left; vertical-align: top; font-size: 9.5pt; }
+.ros th { background: #eee; }
+.ros tr { page-break-inside: avoid; }
+.ros tr.all td { font-weight: 600; background: #f6f6f6; }
+.ros .flag { color: #b00; }

@@ -110,3 +110,13 @@ body { font: 13px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   #top { height: auto; padding: 8px 12px; flex-wrap: wrap; }
   body { grid-template-rows: auto auto 1fr auto; }
 }
+.ghost.off { opacity: .5; border-style: dashed; }
+.block.dragging { pointer-events: none; }
+.btn.has-hard { background: #fff1f2; border-color: var(--hard); color: var(--hard); font-weight: 600; }
+.btn.has-soft { background: #fffbea; border-color: var(--soft); color: #8a6100; font-weight: 600; }
+.menu { position: relative; }
+.menu-items { display: none; position: absolute; right: 0; top: 100%; margin-top: 4px; background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 4px; z-index: 50; min-width: 220px; flex-direction: column; gap: 2px; box-shadow: 0 4px 12px rgba(0,0,0,.12); }
+.menu.open .menu-items { display: flex; }
+.menu-items .btn { border: 0; text-align: left; }
+.cov tr.unassigned td.name { color: var(--muted); font-style: italic; }
+#print-view { display: none; }
