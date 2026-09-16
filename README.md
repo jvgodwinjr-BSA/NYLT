@@ -29,7 +29,25 @@ Deploying: [docs/DEPLOY-HOSTINGER.md](docs/DEPLOY-HOSTINGER.md).
 8. **+ Quick activity** adds something that is not in the catalog — SD-weekend staff tasks, for example.
 9. **Export ▾**: run-of-show CSV, an Authority-sheet-shaped CSV (Practice SD and Practice date/time filled in), or Print / Save as PDF for one table per day.
 
-The schedule autosaves in your browser. **Save JSON** writes a file you can drop in the shared Drive folder and **Load JSON** brings it back on another machine; the header shows when there are changes not yet saved to a file.
+## Where the schedule is saved
+
+The schedule lives **on the website**, so you and the Course Director see the same plan. `api/placements.php` stores one JSON file per content pack, behind the same shared password that unlocks the roster.
+
+- Changes save automatically about a second after you stop editing. The header shows `✓ saved to site`.
+- Another person's changes appear within about twenty seconds, without anyone reloading — but only when you have nothing unsaved, so an edit in progress is never yanked away.
+- If two people save at once the second one is refused rather than silently overwriting. A banner offers **Use theirs**, **Keep mine**, or **Save mine to a file first**.
+- If the site is unreachable, or you open the app without the password, it falls back to a browser-only copy and says so (`browser only`). Nothing is lost; it just is not shared.
+- **Save JSON** still exists, and is worth doing at milestones — it is a backup you control and the only copy that survives if the server file is ever lost.
+
+Add `?local=1` to the URL to work in browser-only mode deliberately.
+
+Setting it up (once per password change):
+
+```
+npm run api-password     # writes api/config.php — a salt and a hash, never the password
+```
+
+Commit `api/config.php` and push.
 
 ## Names
 
@@ -61,8 +79,9 @@ Rule for contributors: **never commit a real name in plaintext.** Git history is
 index.html, src/            the app (plain ES modules)
 packs/nylt-27-1/            content pack: activities, events, tracks, resources, constraints, templates
 public/roster.enc           encrypted names
-scripts/                    import-catalog (xlsx -> CSVs), encrypt-roster, build,
-                            name-guard, validate-pack, lint, hooks/
+api/                        placements.php — shared schedule storage (PHP, on the website)
+scripts/                    import-catalog (xlsx -> CSVs), encrypt-roster, api-password,
+                            build, name-guard, validate-pack, lint, hooks/
 docs/                       DATA-MODEL, CONTENT-PACKS, DEPLOY-HOSTINGER, YOUTH-PROTECTION
 tests/                      node:test — conflict engine, roster crypto, guards
 ```

@@ -1,6 +1,11 @@
 // Encrypted roster: id -> display name. Decrypted in the browser with WebCrypto; never written to disk or the network.
-const ROSTER_URL = './public/roster.enc';
-const CACHE_KEY = 'program-scheduler:roster';
+import { ASSET_V } from './config.js?v=3';
+
+const ROSTER_URL = `./public/roster.enc?v=${ASSET_V}`;
+// The shared password is cached, not the decrypted roster: one secret in storage instead of
+// two, and the API needs the password anyway to save. sessionStorage is tab-scoped and clears
+// when the tab closes.
+const PW_KEY = 'program-scheduler:pw';
 const b64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
 
 export async function fetchRosterBlob() {
@@ -23,6 +28,6 @@ export async function decryptRoster(blob, password) {
   return new Map(entries.map((e) => [e.id, e.name]));
 }
 
-export function cacheRoster(map) { try { sessionStorage.setItem(CACHE_KEY, JSON.stringify([...map])); } catch {} }
-export function loadCachedRoster() { try { const raw = sessionStorage.getItem(CACHE_KEY); return raw ? new Map(JSON.parse(raw)) : null; } catch { return null; } }
-export function forgetRoster() { try { sessionStorage.removeItem(CACHE_KEY); } catch {} }
+export function cachePassword(pw) { try { sessionStorage.setItem(PW_KEY, pw); } catch {} }
+export function cachedPassword() { try { return sessionStorage.getItem(PW_KEY); } catch { return null; } }
+export function forgetRoster() { try { sessionStorage.removeItem(PW_KEY); } catch {} }

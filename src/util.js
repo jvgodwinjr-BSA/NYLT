@@ -1,4 +1,4 @@
-import { SLOT_MIN } from './config.js';
+import { SLOT_MIN } from './config.js?v=3';
 
 export const pad = (n) => String(n).padStart(2, '0');
 export const minToHHMM = (m) => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;

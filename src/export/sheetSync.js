@@ -1,9 +1,9 @@
 // CSV in the Presentations Authority column order, so the scheduler's clock flows back to the sheet:
 // Practice SD (as assigned, or inferred from where it is placed) and Practice date/time (from the placement).
-import { state, activities, resourceLabel } from '../state.js';
-import { toCsv } from '../csv.js';
-import { downloadText } from '../store/localStore.js';
-import { fmt12, dayLabel } from '../util.js';
+import { state, activities, resourceLabel } from '../state.js?v=3';
+import { toCsv } from '../csv.js?v=3';
+import { downloadText } from '../store/localStore.js?v=3';
+import { fmt12, dayLabel } from '../util.js?v=3';
 
 export const AUTHORITY_COLUMNS = ['Presentation', 'Delivery', 'Syllabus day', 'Short description', 'Owner', "Who's required", 'Practice SD', 'Practice date/time', 'Ready', 'Group', 'Time allowed', 'Last year (25-1)', 'Recommended presenter', 'Recommended location'];
 const GROUP = { A: 'A — Troop (main hall)', B: 'B — Patrol / TG', C: 'C — Flag / ceremony' };

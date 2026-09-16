@@ -1,7 +1,7 @@
 // Loads a content pack (five CSVs + optional templates.json) into typed objects.
-import { parseCsv } from './csv.js';
-import { DAY_START_MIN, DAY_END_MIN, SLOT_MIN } from './config.js';
-import { parseLocal, addDays, dayLabel } from './util.js';
+import { parseCsv } from './csv.js?v=3';
+import { DAY_START_MIN, DAY_END_MIN, SLOT_MIN, ASSET_V } from './config.js?v=3';
+import { parseLocal, addDays, dayLabel } from './util.js?v=3';
 
 const safeJson = (s) => { try { return s ? JSON.parse(s) : {}; } catch { return {}; } };
 const bool = (v) => /^(true|1|yes|y)$/i.test(String(v).trim());
@@ -19,9 +19,9 @@ export function computeDays(ev) {
 }
 
 export async function loadPack(packId, base = './packs/') {
-  const get = async (f) => { const r = await fetch(`${base}${packId}/${f}`); if (!r.ok) throw new Error(`Pack ${packId}: missing ${f}`); return r.text(); };
+  const get = async (f) => { const r = await fetch(`${base}${packId}/${f}?v=${ASSET_V}`); if (!r.ok) throw new Error(`Pack ${packId}: missing ${f}`); return r.text(); };
   const [a, e, t, r, c] = await Promise.all(['activities.csv', 'events.csv', 'tracks.csv', 'resources.csv', 'constraints.csv'].map(get));
-  const templates = await fetch(`${base}${packId}/templates.json`).then((x) => (x.ok ? x.json() : {})).catch(() => ({}));
+  const templates = await fetch(`${base}${packId}/templates.json?v=${ASSET_V}`).then((x) => (x.ok ? x.json() : {})).catch(() => ({}));
   const activities = parseCsv(a).map((x) => ({ ...x, duration_min: Number(x.duration_min) || SLOT_MIN,
     syllabus_day: x.syllabus_day ? Number(x.syllabus_day) : null, tags: x.tags ? x.tags.split('|').filter(Boolean) : [] }));
   const tracks = parseCsv(t).map((x) => ({ ...x, is_all_hands: bool(x.is_all_hands), sort: Number(x.sort) || 0 })).sort((p, q) => p.sort - q.sort);

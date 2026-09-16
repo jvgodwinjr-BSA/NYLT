@@ -5,6 +5,8 @@ Notable changes to the Program Scheduler. Format follows [Keep a Changelog](http
 ## [Unreleased]
 
 ### Added
+- **The schedule is saved on the website**, not in each person's browser. `api/placements.php` stores one JSON file per pack behind the shared password; the app saves about a second after you stop editing and picks up someone else's changes within twenty seconds. Version-checked writes mean a simultaneous save is refused with a choice rather than silently overwriting. Falls back to browser-only when the site is unreachable or no password is entered.
+- `npm run api-password` writes `api/config.php` — a PBKDF2-SHA256 salt and hash, never the password.
 - `npm run roster` — one command for the roster (`pull`, `push`, `list`, `show`, `set`, `unset`, `check`). `list` and `check` report coverage without printing a name, so a name change no longer means opening a file full of youth names or pasting a multi-line `node -e` block. `set`/`unset`/`push` re-encrypt under the existing password, so nobody needs a new one.
 - `scripts/common-name-words.txt` — a generic, committed list of words that are both ordinary English and names. Without it a roster containing a surname like Lane produced 80 false positives ("lane" appears 58 times, since lanes are the core concept), which made the guard unusable on a fresh clone. Being generic rather than roster-derived, it leaks nothing.
 - `npm run check` — one gate for lint, pack validation, name guard, and unit tests.

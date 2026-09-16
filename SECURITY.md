@@ -18,6 +18,17 @@ The repository and the deployed site are both public. The roster is mostly minor
 - **Without the password the app still works**, showing role codes. Exports render whatever is on screen and are generated client-side.
 - **`npm run check:names` enforces all of this** and runs in CI and (once installed) before every commit.
 
+## The shared schedule
+
+`api/placements.php` requires the shared password on **every** request, read or write, sent as the `X-Schedule-Password` header over HTTPS. The server stores only a PBKDF2-SHA256 hash (210,000 iterations) in `api/config.php`, never the password. A failed attempt sleeps 250 ms to blunt online guessing.
+
+The schedule itself contains no personal data — placements reference role ids — so the file at risk holds a course plan, not a roster.
+
+Two consequences worth stating plainly:
+
+- **The browser now holds the password**, in `sessionStorage`, because the app needs it to save. It is tab-scoped and gone when the tab closes. Previously only the decrypted roster was cached; it is now one secret instead of two.
+- **Anyone with the password can edit the shared schedule**, not just read it. That is the same trust boundary as the roster, so it adds no new one — but it does mean a leaked password costs you edits as well as names.
+
 ## What this does not protect against
 
 Stated plainly so nobody is surprised:

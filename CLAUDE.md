@@ -27,8 +27,10 @@ index.html  src/           the app (browser ES modules, no build step)
   canvas.js  drag.js       rendering and all pointer-event dragging
   conflicts.js             pure rule engine + coverage matrix
   editor.js  catalog.js    right panel, left rail
-  roster.js                WebCrypto decrypt of roster.enc
+  roster.js                WebCrypto decrypt of roster.enc; caches the password, not the roster
+  store/apiStore.js        shared schedule on the site; localStore.js is the offline fallback
   export/                  run-of-show CSV, Authority-sheet sync CSV, print view
+api/placements.php         shared schedule storage; version-checked writes, password on every request
 packs/nylt-27-1/           five CSVs + templates.json — see docs/CONTENT-PACKS.md
 scripts/                   import-catalog, encrypt-roster, build, name-guard, validate-pack, lint
 docs/                      DATA-MODEL, CONTENT-PACKS, DEPLOY-HOSTINGER, YOUTH-PROTECTION
@@ -58,4 +60,6 @@ npm run dev          # http://localhost:3000
 - `el()` ignores `null`/`false` children, but `append(...)` on an array containing `null` inserts the string "null" — filter first.
 - An all-hands lane blocks every other lane. That is the mechanism behind "at meals we are all together"; do not special-case meals.
 - Several roster surnames are ordinary English words (Lane is the worst — "lane" is the app's core concept). `scripts/common-name-words.txt` is a generic, committed allowlist that stops ~80 false positives; per-roster additions are `-word` lines in the gitignored `scripts/scrub.local.txt`. Never move that generic list's contents into a roster-derived list — that leaks the names it protects.
+- The schedule is stored on the website, not the browser. `localStore` is only the offline fallback. A save carries the version it was based on; the server refuses a stale one with 409 rather than clobbering, and the client shows a conflict banner. Do not "simplify" that away.
+- The Authority workbook has no formulas: Troop / TG Patrol / Flags / All modules are four independent copies. The importer reads the first three and warns about drift in the fourth.
 - `Practice SD` is blank for every presentation until the Course Director fills it in and the catalog is re-imported. An empty coverage matrix is expected, not a bug.

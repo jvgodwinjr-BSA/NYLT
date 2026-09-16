@@ -6,8 +6,8 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Program Scheduler</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%231f5fbf%27/%3E%3Crect x=%277%27 y=%278%27 width=%2718%27 height=%274%27 rx=%271%27 fill=%27%23fff%27/%3E%3Crect x=%277%27 y=%2714%27 width=%2712%27 height=%274%27 rx=%271%27 fill=%27%23fff%27 opacity=%27.8%27/%3E%3Crect x=%277%27 y=%2720%27 width=%2715%27 height=%274%27 rx=%271%27 fill=%27%23fff%27 opacity=%27.6%27/%3E%3C/svg%3E">
-<link rel="stylesheet" href="./src/styles.css">
-<link rel="stylesheet" href="./src/export/print.css" media="print">
+<link rel="stylesheet" href="./src/styles.css?v=3">
+<link rel="stylesheet" href="./src/export/print.css?v=3" media="print">
 </head>
 <body>
 <header id="top">
@@ -18,6 +18,11 @@
 <main id="canvas" class="canvas" aria-label="Schedule canvas"></main>
 <aside id="panel" class="panel" aria-label="Details"></aside>
 <div id="print-view" aria-hidden="true"></div>
-<script type="module" src="./src/main.js"></script>
+<!-- The ?v= is a cache key, not a version number. Hostinger's CDN cached this file under its
+     old max-age=604800 policy, and edges disagreed about the contents: curl got the current
+     file while a browser got a week-old one. The .htaccess fixes the policy for anything
+     fetched from now on, but cannot evict what is already stored. Bumping this number gives
+     the CDN a URL it has never seen. Only needed again if an edge ever goes stale. -->
+<script type="module" src="./src/main.js?v=3"></script>
 </body>
 </html>
