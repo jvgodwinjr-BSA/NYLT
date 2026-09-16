@@ -14,3 +14,9 @@ scripts/scrub.local.txt
 
 # The live shared schedule, written by api/placements.php
 api/data/*.json
+
+# Saved schedules. `Save JSON` in the app writes <pack>-schedule-<timestamp>.json, and
+# corrected or hand-authored drafts get the same shape. They are a point-in-time plan, not
+# source: they go in the shared Drive folder, or straight into the app with Load JSON.
+*-schedule-*.json
+*-schedule.json
