@@ -18,6 +18,11 @@
 <main id="canvas" class="canvas" aria-label="Schedule canvas"></main>
 <aside id="panel" class="panel" aria-label="Details"></aside>
 <div id="print-view" aria-hidden="true"></div>
-<script type="module" src="./src/main.js"></script>
+<!-- The ?v= is a cache key, not a version number. Hostinger's CDN cached this file under its
+     old max-age=604800 policy, and edges disagreed about the contents: curl got the current
+     file while a browser got a week-old one. The .htaccess fixes the policy for anything
+     fetched from now on, but cannot evict what is already stored. Bumping this number gives
+     the CDN a URL it has never seen. Only needed again if an edge ever goes stale. -->
+<script type="module" src="./src/main.js?v=2"></script>
 </body>
 </html>
