@@ -26,6 +26,12 @@ Push to the deployed branch; Hostinger rebuilds. If auto-deploy is off, press **
 
 Edit `roster.local.csv` (never committed), run `npm run encrypt-roster`, commit the new `public/roster.enc`, push. Everyone who had the old password needs the new one; the sessionStorage cache clears when the tab closes.
 
-## Shared editing later
+## Shared editing
 
-Hostinger web hosting runs PHP. When you want the Course Director and ACD on one live schedule, add `api/placements.php` (~50 lines: read/write one JSON file per pack, check the shared password) and switch `src/main.js` from `localStore` to `src/store/apiStore.js`, which already targets that endpoint. Until then, **Save JSON / Load JSON** through the shared Drive folder is the hand-off.
+`api/placements.php` stores the schedule on the site, so everyone with the password edits one plan. It needs nothing beyond what Hostinger already provides: PHP, and a writable directory.
+
+- `api/config.php` carries a PBKDF2-SHA256 salt and hash of the shared password. Regenerate it with `npm run api-password` whenever the password changes, then commit and push.
+- `api/data/` holds one JSON file per pack. It is gitignored and blocked from direct fetch by `api/data/.htaccess`, so it is only ever reachable through the PHP.
+- **The data directory must be writable by PHP.** If saving reports `api/data is not writable`, set that folder to 755 (or 775) in hPanel's File Manager.
+- **A redeploy must not wipe `api/data/`.** A git *pull*-style sync leaves untracked files alone, which is what you want. If your deploy wipes and re-copies the whole folder, the live schedule would be lost — keep periodic **Save JSON** exports in Drive as insurance, and confirm after your next deploy that the schedule survived.
+- Concurrency is handled with a version number: a save based on a stale version is refused with 409 and the person is offered their choices, rather than one of them losing work silently.

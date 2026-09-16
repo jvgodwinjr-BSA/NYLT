@@ -120,3 +120,8 @@ body { font: 13px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 .menu-items .btn { border: 0; text-align: left; }
 .cov tr.unassigned td.name { color: var(--muted); font-style: italic; }
 #print-view { display: none; }
+.save-state.sync.ok { color: #1a7f37; }
+.save-state.sync.bad { color: var(--hard); font-weight: 600; }
+.conflict-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 3000; background: #fff4e5; border-bottom: 2px solid var(--soft);
+  padding: 10px 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 13px; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+.conflict-bar .btn { margin-left: 4px; }

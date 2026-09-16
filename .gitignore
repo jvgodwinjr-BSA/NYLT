@@ -11,3 +11,6 @@ node_modules/
 Thumbs.db
 # Extra scrub list for the importer (contains names)
 scripts/scrub.local.txt
+
+# The live shared schedule, written by api/placements.php
+api/data/*.json

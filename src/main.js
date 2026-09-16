@@ -7,13 +7,73 @@ import { renderCanvas } from './canvas.js';
 import { installDrag } from './drag.js';
 import { renderBlockEditor, showQuickActivity } from './editor.js';
 import { evaluate, byPlacement, coverageMatrix } from './conflicts.js';
-import { fetchRosterBlob, decryptRoster, cacheRoster, loadCachedRoster, forgetRoster, cryptoAvailable } from './roster.js';
+import { fetchRosterBlob, decryptRoster, cachePassword, cachedPassword, forgetRoster, cryptoAvailable } from './roster.js';
+import { createApiStore, ApiConflict, ApiUnauthorized } from './store/apiStore.js';
 import { el, clear } from './util.js';
 import { renderPrintView } from './export/printView.js';
 
 const $ = (s) => document.querySelector(s);
 state.panelTab = 'event';
 state.violations = [];
+state.remote = null;          // ApiStore when the site is saving for us
+state.sync = 'local';         // local | pending | saving | saved | error | conflict
+state.syncNote = '';
+let saveTimer = null, pollTimer = null, retryAt = 0;
+
+// Saving on the site is the point of shared mode, so it is debounced rather than manual:
+// a drag fires many mutations, and one write 1.2s after the last of them is plenty.
+function scheduleRemoteSave() {
+  if (!state.remote) return;
+  clearTimeout(saveTimer);
+  if (state.sync !== 'conflict') setSync('pending');
+  saveTimer = setTimeout(() => void remoteSave(), 1200);
+}
+function setSync(s, note = '') { state.sync = s; state.syncNote = note; renderHeader(); }
+
+async function remoteSave(force = false) {
+  if (!state.remote) return;
+  clearTimeout(saveTimer);
+  setSync('saving');
+  try {
+    const r = await state.remote.save(state.pack.id, { placements: state.placements, customActivities: state.customActivities }, { force });
+    state.fileDirty = false;
+    setSync('saved', new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }));
+    return r;
+  } catch (e) {
+    if (e instanceof ApiConflict) { setSync('conflict'); showConflict(e.current); return; }
+    if (e instanceof ApiUnauthorized) { state.remote = null; setSync('local', 'the site rejected the password'); return; }
+    retryAt = Date.now() + 15000;
+    setSync('error', e.message);
+    setTimeout(() => { if (state.sync === 'error') void remoteSave(); }, 15000);
+  }
+}
+
+// Someone else's changes should show up without anyone reloading. Only adopt them when this
+// browser has nothing unsaved, so an in-progress edit is never yanked away.
+function startPolling() {
+  clearInterval(pollTimer);
+  pollTimer = setInterval(async () => {
+    if (!state.remote || state.sync === 'pending' || state.sync === 'saving' || state.sync === 'conflict') return;
+    if (document.hidden) return;
+    const peek = await state.remote.peekVersion(state.pack.id);
+    if (!peek || peek.version <= state.remote.version) return;
+    state.remote.setVersion(peek.version);
+    replaceSchedule({ placements: peek.data.placements ?? [], customActivities: peek.data.customActivities ?? [] });
+    state.fileDirty = false;
+    setSync('saved', `updated from the site${peek.data.savedBy ? ' (' + peek.data.savedBy + ')' : ''}`);
+  }, 20000);
+}
+
+function showConflict(current) {
+  const bar = el('div.conflict-bar', {},
+    el('strong', {}, 'Someone else saved a newer version of this schedule.'),
+    ' Your changes are still on screen but are not saved on the site.',
+    el('button.btn', { onClick: () => { document.querySelector('.conflict-bar')?.remove(); state.remote.setVersion(current?.version ?? state.remote.version); replaceSchedule({ placements: current?.placements ?? [], customActivities: current?.customActivities ?? [] }); state.fileDirty = false; setSync('saved', 'loaded the site copy'); } }, 'Use theirs (discard mine)'),
+    el('button.btn.primary', { onClick: () => { document.querySelector('.conflict-bar')?.remove(); void remoteSave(true); } }, 'Keep mine (overwrite)'),
+    el('button.btn', { onClick: () => { saveJson(); } }, 'Save mine to a file first'));
+  document.querySelector('.conflict-bar')?.remove();
+  document.body.prepend(bar);
+}
 
 // ---------- header ----------
 function renderHeader() {
@@ -40,17 +100,35 @@ function renderHeader() {
         el('button.btn', { onClick: () => exportSheetSync() }, 'Authority sheet sync CSV'),
         el('button.btn', { onClick: () => window.print() }, 'Print / Save as PDF'))),
     state.rosterBlob ? (state.roster
-      ? el('button.btn', { onClick: () => { forgetRoster(); state.roster = null; render('view'); }, title: 'Forget names on this device' }, '🔓 Names on · Lock')
-      : el('button.btn', { onClick: () => showGate(state.rosterBlob).then(() => render('view')) }, '🔒 Unlock names')) : null,
-    el('span', { id: 'save-state', class: 'save-state' + (state.fileDirty ? ' dirty' : '') }, state.fileDirty ? `● unsaved to file${state.lastFileSave ? ' since ' + state.lastFileSave : ''}` : (state.lastFileSave ? `saved ${state.lastFileSave}` : 'autosaves in this browser')),
+      ? el('button.btn', { onClick: () => { forgetRoster(); state.roster = null; state.password = null; state.remote = null; clearInterval(pollTimer); setSync('local', 'locked'); render('view'); }, title: 'Forget the password on this device and stop saving to the site' }, '🔓 Names on · Lock')
+      : el('button.btn', { onClick: () => showGate(state.rosterBlob).then(async (ok) => { if (ok) await connectToSite(); render('view'); }) }, '🔒 Unlock names')) : null,
+    syncIndicator(),
   ].filter(Boolean));
+}
+
+function syncIndicator() {
+  if (!state.remote) {
+    const why = state.syncNote ? ` (${state.syncNote})` : '';
+    return el('span', { id: 'save-state', class: 'save-state' + (state.fileDirty ? ' dirty' : ''), title: 'Changes are kept in this browser only. Use Save JSON to share them.' },
+      `browser only${why}`);
+  }
+  const map = {
+    pending: ['sync', '● saving soon'],
+    saving: ['sync', 'saving to site…'],
+    saved: ['sync ok', `✓ saved to site${state.syncNote ? ' · ' + state.syncNote : ''}`],
+    error: ['sync bad', `⚠ not saved — retrying`],
+    conflict: ['sync bad', '⚠ conflict — see banner'],
+  };
+  const [cls, text] = map[state.sync] ?? ['sync', ''];
+  return el('span', { id: 'save-state', class: `save-state ${cls}`, title: state.syncNote || 'Everyone with the password sees this schedule.' }, text);
 }
 
 // ---------- file save / load ----------
 function saveJson() {
   const data = serializeSchedule(state);
   downloadText(JSON.stringify(data, null, 1), `${state.pack.id}-schedule-${data.savedAt.slice(0, 16).replace(/[:T]/g, '-')}.json`);
-  state.fileDirty = false; state.lastFileSave = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  state.lastFileSave = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  if (!state.remote) state.fileDirty = false;
   render('view');
 }
 async function loadJson() {
@@ -59,7 +137,9 @@ async function loadJson() {
     const data = JSON.parse(f.text);
     if (data.format !== 'program-scheduler/schedule') throw new Error('Not a schedule file');
     if (data.pack && data.pack !== state.pack.id && !confirm(`This file is for pack "${data.pack}", current pack is "${state.pack.id}". Load anyway?`)) return;
-    replaceSchedule(data); state.fileDirty = false; state.lastFileSave = `loaded ${f.name}`; render('view');
+    replaceSchedule(data); state.fileDirty = false; state.lastFileSave = `loaded ${f.name}`;
+    if (state.remote) await remoteSave(true); // the file the person just chose wins
+    render('view');
   } catch (e) { alert(`Could not load: ${e.message}`); }
 }
 async function exportRunOfShow() { const m = await import('./export/runOfShow.js'); m.exportRunOfShowCsv(); }
@@ -72,11 +152,11 @@ function showGate(blob) {
     const pw = el('input', { type: 'password', placeholder: 'Shared password', autocomplete: 'current-password' });
     const overlay = el('div.gate', {}, el('form', { onSubmit: async (e) => {
       e.preventDefault(); err.textContent = '';
-      try { state.roster = await decryptRoster(blob, pw.value); cacheRoster(state.roster); overlay.remove(); resolve(true); }
+      try { state.roster = await decryptRoster(blob, pw.value); state.password = pw.value; cachePassword(pw.value); overlay.remove(); resolve(true); }
       catch (ex) { err.textContent = ex.message; pw.select(); }
     } },
       el('h2', { style: { margin: 0 } }, 'Program Scheduler'),
-      el('p.muted', { style: { margin: 0 } }, `Enter the shared password to see staff names (${blob.count} on the roster). Without it the schedule shows role codes only.`),
+      el('p.muted', { style: { margin: 0 } }, `Enter the shared password to see staff names (${blob.count} on the roster) and to load and save the shared schedule. Without it you get role codes and a browser-only copy that nobody else sees.`),
       cryptoAvailable() ? null : el('div.err', {}, 'Names need HTTPS or localhost to decrypt.'),
       pw, err,
       el('button.btn.primary', { type: 'submit' }, 'Unlock names'),
@@ -166,13 +246,39 @@ function renderPanel() {
 
 // ---------- render ----------
 export function render(what = 'all') {
-  if (what === 'data') localStore.save(state.pack.id, serializeSchedule(state));
+  if (what === 'data') { localStore.save(state.pack.id, serializeSchedule(state)); scheduleRemoteSave(); }
   state.violations = evaluate({ placements: state.placements, activities: activities(), events: state.pack.events, constraints: state.pack.constraints });
   renderHeader();
   renderRail($('#rail'), { onQuickAdd: () => showQuickActivity(() => render('data')) });
   renderCanvas($('#canvas'), { violationsByPlacement: byPlacement(state.violations) });
   renderPanel();
   renderPrintView($('#print-view'));
+}
+
+// Prefer the copy on the website. Falls back to this browser when the API is absent (local
+// dev, PHP off) or unreachable, so the app still works rather than showing nothing.
+async function connectToSite() {
+  if (!state.password || new URLSearchParams(location.search).has('local')) { setSync('local', state.password ? '' : 'no password'); return; }
+  const api = createApiStore({ password: state.password });
+  try {
+    const remote = await api.load(state.pack.id);
+    state.remote = api;
+    const localCount = state.placements.length;
+    if (remote.version === 0 && localCount) {
+      // First run against a fresh server: push what this browser already has rather than
+      // silently replacing the person's work with an empty schedule.
+      await api.save(state.pack.id, { placements: state.placements, customActivities: state.customActivities }, { force: true });
+      setSync('saved', 'moved this browser\'s plan to the site');
+    } else {
+      replaceSchedule({ placements: remote.placements, customActivities: remote.customActivities });
+      state.fileDirty = false;
+      setSync('saved', remote.savedAt ? `site copy v${remote.version}` : 'site copy is empty');
+    }
+    startPolling();
+  } catch (e) {
+    state.remote = null;
+    setSync('local', e.code === 'unavailable' && e.status === 503 ? 'shared saving not set up yet' : e.message);
+  }
 }
 
 async function init() {
@@ -183,7 +289,12 @@ async function init() {
   const q = new URLSearchParams(location.search);
   state.eventId = state.pack.events.find((e) => e.id === q.get('event'))?.id ?? state.pack.events[0].id;
   state.rosterBlob = await fetchRosterBlob();
-  if (state.rosterBlob) { state.roster = loadCachedRoster(); if (!state.roster && !q.has('nogate')) await showGate(state.rosterBlob); }
+  const cached = cachedPassword();
+  if (state.rosterBlob && cached) {
+    try { state.roster = await decryptRoster(state.rosterBlob, cached); state.password = cached; } catch { forgetRoster(); }
+  }
+  if (state.rosterBlob && !state.roster && !q.has('nogate')) await showGate(state.rosterBlob);
+  await connectToSite();
   subscribe(render);
   installDrag({ rail: $('#rail'), canvas: $('#canvas') });
   document.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); } });
