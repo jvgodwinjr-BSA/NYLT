@@ -1,7 +1,7 @@
 // Right-panel block editor and the Quick Activity form.
-import { TYPE_ORDER } from './config.js?v=3';
-import { state, activityById, currentEvent, updatePlacement, removePlacement, addCustomActivity, resourceLabel, select } from './state.js?v=3';
-import { el, fmtRange, minToHHMM, hhmmToMin, snap } from './util.js?v=3';
+import { TYPE_ORDER } from './config.js?v=4';
+import { state, activityById, currentEvent, updatePlacement, removePlacement, addCustomActivity, resourceLabel, select } from './state.js?v=4';
+import { el, fmtRange, minToHHMM, hhmmToMin, snap } from './util.js?v=4';
 
 export function renderBlockEditor(root, p, violations = []) {
   const a = activityById(p.activity_id);
