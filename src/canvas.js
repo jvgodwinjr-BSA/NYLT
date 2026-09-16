@@ -1,7 +1,7 @@
 // Center canvas: one section per event day, lanes per track, blocks sized by duration on the 15-minute spine.
-import { PX_PER_SLOT, SLOT_MIN, GUTTER_PX, LANE_PX } from './config.js';
-import { state, currentEvent, eventPlacements, activityById, resourceLabel } from './state.js';
-import { el, clear, fmt12, fmtRange } from './util.js';
+import { PX_PER_SLOT, SLOT_MIN, GUTTER_PX, LANE_PX } from './config.js?v=3';
+import { state, currentEvent, eventPlacements, activityById, resourceLabel } from './state.js?v=3';
+import { el, clear, fmt12, fmtRange } from './util.js?v=3';
 
 export const slotsBetween = (a, b) => (b - a) / SLOT_MIN;
 export const minToY = (min, day) => slotsBetween(day.startMin, min) * PX_PER_SLOT;

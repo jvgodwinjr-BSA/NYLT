@@ -1,5 +1,7 @@
 // Encrypted roster: id -> display name. Decrypted in the browser with WebCrypto; never written to disk or the network.
-const ROSTER_URL = './public/roster.enc';
+import { ASSET_V } from './config.js?v=3';
+
+const ROSTER_URL = `./public/roster.enc?v=${ASSET_V}`;
 // The shared password is cached, not the decrypted roster: one secret in storage instead of
 // two, and the API needs the password anyway to save. sessionStorage is tab-scoped and clears
 // when the tab closes.

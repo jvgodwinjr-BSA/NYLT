@@ -1,16 +1,16 @@
-import { PACK_ID } from './config.js';
-import { loadPack } from './pack.js';
-import { state, subscribe, setEvent, setView, undo, redo, currentEvent, replaceSchedule, addPlacement, eventPlacements, select, activities } from './state.js';
-import { localStore, serializeSchedule, downloadText, pickFile } from './store/localStore.js';
-import { renderRail } from './catalog.js';
-import { renderCanvas } from './canvas.js';
-import { installDrag } from './drag.js';
-import { renderBlockEditor, showQuickActivity } from './editor.js';
-import { evaluate, byPlacement, coverageMatrix } from './conflicts.js';
-import { fetchRosterBlob, decryptRoster, cachePassword, cachedPassword, forgetRoster, cryptoAvailable } from './roster.js';
-import { createApiStore, ApiConflict, ApiUnauthorized } from './store/apiStore.js';
-import { el, clear } from './util.js';
-import { renderPrintView } from './export/printView.js';
+import { PACK_ID } from './config.js?v=3';
+import { loadPack } from './pack.js?v=3';
+import { state, subscribe, setEvent, setView, undo, redo, currentEvent, replaceSchedule, addPlacement, eventPlacements, select, activities } from './state.js?v=3';
+import { localStore, serializeSchedule, downloadText, pickFile } from './store/localStore.js?v=3';
+import { renderRail } from './catalog.js?v=3';
+import { renderCanvas } from './canvas.js?v=3';
+import { installDrag } from './drag.js?v=3';
+import { renderBlockEditor, showQuickActivity } from './editor.js?v=3';
+import { evaluate, byPlacement, coverageMatrix } from './conflicts.js?v=3';
+import { fetchRosterBlob, decryptRoster, cachePassword, cachedPassword, forgetRoster, cryptoAvailable } from './roster.js?v=3';
+import { createApiStore, ApiConflict, ApiUnauthorized } from './store/apiStore.js?v=3';
+import { el, clear } from './util.js?v=3';
+import { renderPrintView } from './export/printView.js?v=3';
 
 const $ = (s) => document.querySelector(s);
 state.panelTab = 'event';
@@ -142,8 +142,8 @@ async function loadJson() {
     render('view');
   } catch (e) { alert(`Could not load: ${e.message}`); }
 }
-async function exportRunOfShow() { const m = await import('./export/runOfShow.js'); m.exportRunOfShowCsv(); }
-async function exportSheetSync() { const m = await import('./export/sheetSync.js'); m.exportSheetSyncCsv(); }
+async function exportRunOfShow() { const m = await import('./export/runOfShow.js?v=3'); m.exportRunOfShowCsv(); }
+async function exportSheetSync() { const m = await import('./export/sheetSync.js?v=3'); m.exportSheetSyncCsv(); }
 
 // ---------- roster gate ----------
 function showGate(blob) {
