@@ -100,3 +100,49 @@ test('common-name-words lets an ordinary word through alone but still catches th
     assert.match(caught.out, /robin lane/i);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
+
+// The schedule validator is what stands between a hand-authored plan and a broken import,
+// so it has to actually catch the things that broke the first draft we were handed.
+test('validate-schedule flags a bad lane, a misspelled activity, and an off-grid start', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'sched-'));
+  try {
+    const good = {
+      format: 'program-scheduler/schedule', pack: 'nylt-27-1',
+      placements: [{ id: 'a', activity_id: 'lunch', event_id: 'W2', track_id: 'W2-all', day: '2027-02-20', start_min: 720, duration_min: 60, resource_ids: [], flags: [] }],
+      customActivities: [],
+    };
+    const run = (doc) => {
+      const f = join(dir, 'x.json');
+      wf(f, JSON.stringify(doc));
+      try { return { ok: true, out: execFileSync(process.execPath, [resolve('scripts/validate-schedule.mjs'), f, '--pack', 'nylt-27-1'], { encoding: 'utf8', stdio: 'pipe' }) }; }
+      catch (e) { return { ok: false, out: String(e.stdout ?? '') + String(e.stderr ?? '') }; }
+    };
+
+    assert.ok(run(good).ok, 'a valid placement must pass');
+
+    const badLane = structuredClone(good); badLane.placements[0].track_id = 'W2-troop';
+    const r1 = run(badLane);
+    assert.ok(!r1.ok && /no lane "W2-troop"/.test(r1.out), r1.out);
+
+    const badAct = structuredClone(good); badAct.placements[0].activity_id = 'staff-arrival-check-in';
+    const r2 = run(badAct);
+    assert.ok(!r2.ok && /no activity "staff-arrival-check-in"/.test(r2.out), r2.out);
+
+    const badDay = structuredClone(good); badDay.placements[0].day = '2027-03-01';
+    assert.ok(/is not a day of W2/.test(run(badDay).out));
+
+    // off-grid and out-of-bounds are warnings: they load, but they are wrong
+    const offGrid = structuredClone(good); offGrid.placements[0].start_min = 725;
+    const r3 = run(offGrid);
+    assert.ok(r3.ok, 'off-grid still imports');
+    assert.match(r3.out, /off the 15-minute grid/);
+
+    const late = structuredClone(good); late.placements[0].day = '2027-02-21'; late.placements[0].start_min = 950;
+    assert.match(run(late).out, /after this day closes/);
+
+    const badCustom = structuredClone(good);
+    badCustom.customActivities = [{ id: 'qm-x', name: 'QM thing', duration_min: 60, type: 'staff_task', audience: 'qm_staff' }];
+    const r4 = run(badCustom);
+    assert.ok(!r4.ok && /missing delivery, soft_vs_hard, tags/.test(r4.out), r4.out);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
