@@ -55,6 +55,26 @@ curl -sSD- -o/dev/null https://YOUR-SITE/src/main.js | grep -iE 'cache-control|x
 
 **Bust the whole graph or none of it.** The app is unbundled ES modules: a new `main.js` importing a stale `roster.js` fails outright with *"does not provide an export named …"*. `npm run cache-bust` moves every URL together for exactly this reason.
 
+## "The new domain shows a Hostinger parked page"
+
+You will see *"Parked Domain name on Hostinger DNS system"*. **DNS is not the problem** — confirm
+it by resolving the new hostname and the site's current one; they will return the same Hostinger
+edge IPs. The page means the hostname points at Hostinger but **no website in hPanel claims it**.
+
+Adding a DNS record or a domain alias does not create that binding. Use the site's own
+**Change Website Domain**, per [DEPLOY-HOSTINGER.md](DEPLOY-HOSTINGER.md#changing-the-sites-domain)
+— and read the warning there about `api/data/` before creating any new website.
+
+## "Everyone is suddenly in browser-only mode"
+
+Expected for one visit after a domain change, and nothing is lost. sessionStorage is scoped to the
+hostname, so the cached password does not follow the site to a new address. Everyone enters the
+shared password once; the schedule itself lives on the server and is untouched.
+
+If it persists *after* entering the password, check that the new address is really on HTTPS —
+WebCrypto, which decrypts the roster, only exists on secure origins, and on plain HTTP the gate
+cannot succeed at all. `curl -sI http://YOUR-SITE/` should show a 301 to `https://`.
+
 ## "Names show as TG-1 instead of real names"
 
 You are not unlocked. Click **🔒 Unlock names** and enter the shared password. Without it the app works fine but shows role codes, and the schedule is browser-only.

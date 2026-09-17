@@ -8,6 +8,11 @@ Notable changes to the Program Scheduler. Format follows [Keep a Changelog](http
 - **124 Quartermaster tasks in the catalog**, tagged `qm` plus a category and a suggested SD, so the rail's search surfaces the QM work for a weekend. `npm run import-qm-tasks` converts `scripts/qm-tasks-source.json` into extras rows; `npm run import-catalog` folds them into the pack. The pack now holds 213 activities.
 - Extras rows carry their own `source`, so a row's origin stays visible in `activities.csv`.
 
+### Changed
+- **The site moved to its own domain.** Documented in [DEPLOY-HOSTINGER.md](docs/DEPLOY-HOSTINGER.md#changing-the-sites-domain), because the failure mode is misleading: the new hostname resolved correctly and still served Hostinger's parked page, since pointing DNS at Hostinger does not bind a hostname to a website. The fix is the site's own **Change Website Domain** — never "add a website", which would give the app an empty document root and strand the live schedule in the old folder. No code changed; every path the app fetches is already relative.
+- `docs/DEPLOY-HOSTINGER.md` said the publish directory is `dist`. The live site serves the **repository root** — `/package.json` and `/CLAUDE.md` return 200 while `/dist/index.html` is 404 — which is why the root `.htaccess` is the one in force. Corrected, since the domain instructions depend on knowing which folder is served.
+- `docs/TROUBLESHOOTING.md` gains the parked-page symptom and "everyone is suddenly in browser-only mode", which is the expected one-visit effect of a hostname change on origin-scoped sessionStorage, not a fault.
+
 ### Notes
 - They arrived as a schedule file of `customActivities` with `"placements": []`. Loading that would have **replaced the live 148-placement schedule with nothing**, because Load JSON replaces rather than merges. Catalog belongs in the pack; the schedule was never touched.
 - Three notes and two titles named individual staff and now read as roles — durable across courses, and the only form the name guard permits. The two titles were re-slugged, since the ids were slugs of them.
