@@ -1,7 +1,42 @@
 // Right-panel block editor and the Quick Activity form.
-import { TYPE_ORDER } from './config.js?v=5';
-import { state, activityById, currentEvent, updatePlacement, removePlacement, addCustomActivity, resourceLabel, select } from './state.js?v=5';
-import { el, fmtRange, minToHHMM, hhmmToMin, snap } from './util.js?v=5';
+import { TYPE_ORDER } from './config.js?v=6';
+import { state, activityById, currentEvent, updatePlacement, removePlacement, addCustomActivity, resourceLabel, select, setTaskStatus } from './state.js?v=6';
+import { el, fmtRange, minToHHMM, hhmmToMin, snap } from './util.js?v=6';
+import { isTask, taskStatus, TASK_STATUSES, TASK_STATUS_LABEL } from './progress.js?v=6';
+
+/**
+ * Status control for a staff task. Shown wherever a task is — on a placed block, and in the rail
+ * for the ~125 that are not on the clock at all.
+ *
+ * "Who" is a role id, never a typed name: the dropdown lists roles, the roster turns them into
+ * names on screen, and what gets stored and exported is the role.
+ */
+export function renderTaskStatus(a, { compact = false } = {}) {
+  if (!isTask(a)) return null;
+  const cur = taskStatus(state.tasks, a.id);
+  const entry = state.tasks?.[a.id];
+  const qmFirst = [...state.pack.resources].sort((x, y) => (/QM/i.test(y.id) ? 0 : 1) - (/QM/i.test(x.id) ? 0 : 1));
+  const who = el('select', { onChange: (e) => setTaskStatus(a.id, taskStatus(state.tasks, a.id), { by: e.target.value, note: entry?.note ?? '' }) },
+    el('option', { value: '' }, '— who? —'),
+    qmFirst.map((r) => el('option', { value: r.id, selected: r.id === entry?.by }, resourceLabel(r.id))));
+
+  const buttons = el('div.status-row', {}, TASK_STATUSES.map((st) => el('button', {
+    class: 'status-btn s-' + st + (st === cur ? ' on' : ''),
+    title: TASK_STATUS_LABEL[st],
+    onClick: () => setTaskStatus(a.id, st, { by: entry?.by ?? '', note: entry?.note ?? '' }),
+  }, TASK_STATUS_LABEL[st])));
+
+  return el('div.task-status', {},
+    compact ? null : el('h3', {}, 'Status'),
+    buttons,
+    cur === 'todo' ? null : el('div', { style: { marginTop: '6px' } },
+      el('label', {}, 'Who', who),
+      cur === 'blocked'
+        ? el('label', {}, 'Blocked by what?', el('input', { value: entry?.note ?? '', placeholder: 'e.g. waiting on the council PO',
+            onChange: (e) => setTaskStatus(a.id, 'blocked', { by: entry?.by ?? '', note: e.target.value }) }))
+        : null),
+    entry?.at ? el('p.muted', { style: { fontSize: '11px', margin: '4px 0 0' } }, `${TASK_STATUS_LABEL[cur]} · ${new Date(entry.at).toLocaleDateString()}`) : null);
+}
 
 export function renderBlockEditor(root, p, violations = []) {
   const a = activityById(p.activity_id);
@@ -28,6 +63,7 @@ export function renderBlockEditor(root, p, violations = []) {
     el('label', {}, el('input', { type: 'checkbox', style: { width: 'auto' }, checked: p.flags?.includes('override'), onChange: (e) => {
       const f = new Set(p.flags ?? []); e.target.checked ? f.add('override') : f.delete('override'); updatePlacement(p.id, { flags: [...f] }); } }),
       ' Override: intentionally in this lane (silences the TG-delivery warning)'),
+    renderTaskStatus(a),
     el('label', {}, 'Notes', el('textarea', { rows: 2, onChange: (e) => updatePlacement(p.id, { notes: e.target.value }) }, p.notes ?? '')),
     el('div', { style: { display: 'flex', gap: '6px', marginTop: '10px' } },
       el('button.btn', { onClick: () => removePlacement(p.id) }, 'Remove from schedule'),

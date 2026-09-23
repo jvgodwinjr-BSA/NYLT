@@ -1,16 +1,17 @@
-import { PACK_ID } from './config.js?v=5';
-import { loadPack } from './pack.js?v=5';
-import { state, subscribe, setEvent, setView, undo, redo, currentEvent, replaceSchedule, addPlacement, eventPlacements, select, activities } from './state.js?v=5';
-import { localStore, serializeSchedule, downloadText, pickFile } from './store/localStore.js?v=5';
-import { renderRail } from './catalog.js?v=5';
-import { renderCanvas } from './canvas.js?v=5';
-import { installDrag } from './drag.js?v=5';
-import { renderBlockEditor, showQuickActivity } from './editor.js?v=5';
-import { evaluate, byPlacement, coverageMatrix } from './conflicts.js?v=5';
-import { fetchRosterBlob, decryptRoster, cachePassword, cachedPassword, forgetRoster, cryptoAvailable } from './roster.js?v=5';
-import { createApiStore, ApiConflict, ApiUnauthorized } from './store/apiStore.js?v=5';
-import { el, clear } from './util.js?v=5';
-import { renderPrintView } from './export/printView.js?v=5';
+import { PACK_ID } from './config.js?v=6';
+import { loadPack } from './pack.js?v=6';
+import { state, subscribe, setEvent, setView, undo, redo, currentEvent, replaceSchedule, addPlacement, eventPlacements, select, activities } from './state.js?v=6';
+import { localStore, serializeSchedule, downloadText, pickFile } from './store/localStore.js?v=6';
+import { renderRail } from './catalog.js?v=6';
+import { renderCanvas } from './canvas.js?v=6';
+import { installDrag } from './drag.js?v=6';
+import { renderBlockEditor, showQuickActivity } from './editor.js?v=6';
+import { evaluate, byPlacement, coverageMatrix } from './conflicts.js?v=6';
+import { progress } from './progress.js?v=6';
+import { fetchRosterBlob, decryptRoster, cachePassword, cachedPassword, forgetRoster, cryptoAvailable } from './roster.js?v=6';
+import { createApiStore, ApiConflict, ApiUnauthorized } from './store/apiStore.js?v=6';
+import { el, clear } from './util.js?v=6';
+import { renderPrintView } from './export/printView.js?v=6';
 
 const $ = (s) => document.querySelector(s);
 const LAST_EVENT_KEY = (packId) => `program-scheduler:last-event:${packId}`;
@@ -73,7 +74,7 @@ function startPolling() {
     const peek = await state.remote.peekVersion(state.pack.id);
     if (!peek || peek.version <= state.remote.version) return;
     state.remote.setVersion(peek.version);
-    replaceSchedule({ placements: peek.data.placements ?? [], customActivities: peek.data.customActivities ?? [] });
+    replaceSchedule({ placements: peek.data.placements ?? [], customActivities: peek.data.customActivities ?? [], tasks: peek.data.tasks ?? {} });
     state.fileDirty = false;
     setSync('saved', `updated from the site${peek.data.savedBy ? ' (' + peek.data.savedBy + ')' : ''}`);
   }, 20000);
@@ -83,7 +84,7 @@ function showConflict(current) {
   const bar = el('div.conflict-bar', {},
     el('strong', {}, 'Someone else saved a newer version of this schedule.'),
     ' Your changes are still on screen but are not saved on the site.',
-    el('button.btn', { onClick: () => { document.querySelector('.conflict-bar')?.remove(); state.remote.setVersion(current?.version ?? state.remote.version); replaceSchedule({ placements: current?.placements ?? [], customActivities: current?.customActivities ?? [] }); state.fileDirty = false; setSync('saved', 'loaded the site copy'); } }, 'Use theirs (discard mine)'),
+    el('button.btn', { onClick: () => { document.querySelector('.conflict-bar')?.remove(); state.remote.setVersion(current?.version ?? state.remote.version); replaceSchedule({ placements: current?.placements ?? [], customActivities: current?.customActivities ?? [], tasks: current?.tasks ?? {} }); state.fileDirty = false; setSync('saved', 'loaded the site copy'); } }, 'Use theirs (discard mine)'),
     el('button.btn.primary', { onClick: () => { document.querySelector('.conflict-bar')?.remove(); void remoteSave(true); } }, 'Keep mine (overwrite)'),
     el('button.btn', { onClick: () => { saveJson(); } }, 'Save mine to a file first'));
   document.querySelector('.conflict-bar')?.remove();
@@ -157,8 +158,8 @@ async function loadJson() {
     render('view');
   } catch (e) { alert(`Could not load: ${e.message}`); }
 }
-async function exportRunOfShow() { const m = await import('./export/runOfShow.js?v=5'); m.exportRunOfShowCsv(); }
-async function exportSheetSync() { const m = await import('./export/sheetSync.js?v=5'); m.exportSheetSyncCsv(); }
+async function exportRunOfShow() { const m = await import('./export/runOfShow.js?v=6'); m.exportRunOfShowCsv(); }
+async function exportSheetSync() { const m = await import('./export/sheetSync.js?v=6'); m.exportSheetSyncCsv(); }
 
 // ---------- roster gate ----------
 function showGate(blob) {
@@ -207,7 +208,7 @@ function renderPanel() {
   const vmap = byPlacement(state.violations);
   if (sel) { renderBlockEditor(p, sel, vmap.get(sel.id) ?? []); return; }
   const tab = (id, label) => el('button', { class: 'tab' + (state.panelTab === id ? ' on' : ''), onClick: () => { state.panelTab = id; render('view'); } }, label);
-  p.append(el('div.tabs', {}, tab('event', 'Event'), tab('issues', 'Issues'), tab('coverage', 'Practice coverage')));
+  p.append(el('div.tabs', {}, tab('event', 'Event'), tab('issues', 'Issues'), tab('progress', 'Progress'), tab('coverage', 'Practice coverage')));
 
   if (state.panelTab === 'event') {
     p.append(el('h2', {}, ev?.name ?? ''), el('p.muted', {}, ev?.notes ?? ''),
@@ -239,6 +240,42 @@ function renderPanel() {
     }
     const other = state.violations.filter((v) => !v.quiet && !mine.includes(v)).length;
     if (other) p.append(el('p.muted', {}, `${other} more on other events.`));
+  }
+
+  if (state.panelTab === 'progress') {
+    const r = progress({ activities: activities(), events: state.pack.events, tasks: state.tasks });
+    if (!r.total) p.append(el('h2', {}, 'Progress'), el('p.muted', {}, 'No staff tasks in this pack yet.'));
+    else {
+      // The headline is the pace number, not the raw count: finishing 12 of 124 sounds like
+      // nothing, while being 12 ahead of what the calendar asked for is the thing worth seeing.
+      const ahead = r.aheadBy;
+      p.append(el('h2', {}, 'Staff task progress'),
+        el('div', { class: 'pace ' + (ahead > 0 ? 'good' : ahead < 0 ? 'bad' : 'level') },
+          el('div.pace-n', {}, ahead > 0 ? `${ahead} ahead` : ahead < 0 ? `${-ahead} behind` : 'On pace'),
+          el('div.pace-sub', {}, ahead > 0
+            ? `${r.datedDone} done, and only ${r.dueByNow} were due by now.`
+            : ahead < 0 ? `${r.datedDone} done of the ${r.dueByNow} due by now.`
+            : `${r.datedDone} done, exactly what was due by now.`)),
+        el('p.muted', {}, `${r.done} of ${r.total} tasks complete (${r.percentDone}%) · ${r.hoursDone} of ${r.hours} hours`
+          + `${r.doing ? ' · ' + r.doing + ' in progress' : ''}${r.blocked ? ' · ' + r.blocked + ' blocked' : ''}`),
+        el('div.bar', {}, el('div.bar-fill', { style: { width: `${r.percentDone}%` } })));
+
+      if (r.next) p.append(el('p.muted', { style: { marginTop: '10px' } },
+        el('strong', {}, r.next.label), ` needs ${r.next.remaining} more of ${r.next.total} — `,
+        r.next.daysAway >= 0 ? `${r.next.daysAway} day${r.next.daysAway === 1 ? '' : 's'} away.` : 'already past.'));
+
+      p.append(el('h3', {}, 'By weekend'));
+      const table = el('table.cov', {}, el('thead', {}, el('tr', {}, el('th', {}, 'Due by'), el('th', {}, 'Done'), el('th', {}, 'Left'), el('th', {}, 'Hours left'))));
+      const body = el('tbody');
+      for (const b of r.buckets) body.append(el('tr', { class: b.remaining ? '' : 'unassigned' },
+        el('td.name', { title: b.due ? `due ${b.due}` : 'no deadline' }, b.label),
+        el('td', {}, `${b.done}/${b.total}`),
+        el('td', {}, String(b.remaining)),
+        el('td', {}, String(Math.round((b.minutes - b.minutesDone) / 60)))));
+      table.append(body); p.append(table);
+      p.append(el('p.muted', { style: { fontSize: '11px' } },
+        'Deadlines come from each task\'s weekend tag and the event dates — nothing to maintain by hand. Mark tasks done in the left rail or on a block.'));
+    }
   }
 
   if (state.panelTab === 'coverage') {
@@ -286,7 +323,7 @@ async function connectToSite() {
       await api.save(state.pack.id, { placements: state.placements, customActivities: state.customActivities }, { force: true });
       setSync('saved', 'moved this browser\'s plan to the site');
     } else {
-      replaceSchedule({ placements: remote.placements, customActivities: remote.customActivities });
+      replaceSchedule({ placements: remote.placements, customActivities: remote.customActivities, tasks: remote.tasks });
       state.fileDirty = false;
       setSync('saved', remote.savedAt ? `site copy v${remote.version}` : 'site copy is empty');
     }
@@ -301,7 +338,7 @@ async function init() {
   try { state.pack = await loadPack(PACK_ID); }
   catch (e) { $('#canvas').textContent = `Could not load content pack: ${e.message}`; return; }
   const saved = localStore.load(PACK_ID);
-  if (saved) { state.placements = saved.placements ?? []; state.customActivities = saved.customActivities ?? []; }
+  if (saved) { state.placements = saved.placements ?? []; state.customActivities = saved.customActivities ?? []; state.tasks = saved.tasks ?? {}; }
   const q = new URLSearchParams(location.search);
   state.eventId = chooseEvent(q.get('event'));
   state.rosterBlob = await fetchRosterBlob();

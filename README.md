@@ -4,6 +4,8 @@ A small drag-and-drop scheduler for multi-day programs. Catalog on the left, a 1
 
 Core loop: **catalog → canvas → constraints → export.**
 
+Most of the staff workload never sits on a clock — 125 of the 127 Quartermaster tasks are backlog, not timed sessions — so tasks also carry a **status** (`to do` / `in progress` / `blocked` / `done`) and a **Progress** panel says how far ahead of pace the team is. Deadlines are derived from each task's weekend tag and the event dates, so there is nothing to maintain by hand and nothing to keep in sync: status lives in the same saved schedule as the placements. See [docs/DATA-MODEL.md](docs/DATA-MODEL.md#task-status--the-tasks-map).
+
 ## Run it
 
 No dependencies, no build tooling. Node is only used as a static file server and for the scripts.

@@ -1,5 +1,5 @@
 // v1 persistence: localStorage on every change + explicit JSON file save/load (hand the file around via Drive).
-import { STORAGE_KEY } from '../config.js?v=5';
+import { STORAGE_KEY } from '../config.js?v=6';
 
 export const localStore = {
   load(packId) { try { const raw = localStorage.getItem(STORAGE_KEY(packId)); return raw ? JSON.parse(raw) : null; } catch { return null; } },
@@ -9,7 +9,7 @@ export const localStore = {
 
 export const serializeSchedule = (state) => ({
   format: 'program-scheduler/schedule', version: 1, pack: state.pack.id, savedAt: new Date().toISOString(),
-  placements: state.placements, customActivities: state.customActivities,
+  placements: state.placements, customActivities: state.customActivities, tasks: state.tasks ?? {},
 });
 
 export function downloadText(text, filename, type = 'application/json') {

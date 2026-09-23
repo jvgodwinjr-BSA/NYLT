@@ -63,7 +63,7 @@ The same shape whether it came from **Save JSON** or from the server:
 ```json
 { "format": "program-scheduler/schedule", "version": 17, "pack": "nylt-27-1",
   "savedAt": "2026-09-16T03:38:33+00:00", "savedBy": "ACD",
-  "placements": [...], "customActivities": [...] }
+  "placements": [...], "customActivities": [...], "tasks": { ... } }
 ```
 
 `version` is what makes shared editing safe. Every server write increments it, and a `PUT` carrying a stale version is rejected with **409** plus the current document, rather than overwriting someone else's work. `savedBy` is a free-text label, trimmed to 40 characters, purely so a person can tell where a change came from. Use a role id rather than a name: it is stored in plain text on the server and in every exported file, and it is never used for access control.
@@ -71,6 +71,36 @@ The same shape whether it came from **Save JSON** or from the server:
 A file written by **Save JSON** may carry `version` from whenever it was exported. Loading it pushes to the server with `force`, because the person choosing a file has said plainly which copy they want.
 
 `customActivities` are Quick activities: they live in the schedule, not the pack, and are never written back to the Authority sheet. They must carry the same fields a pack activity does — `id, name, duration_min, type, audience, delivery, soft_vs_hard, tags` — or the left rail cannot render them. `npm run check:schedule` enforces that.
+
+## Task status — the `tasks` map
+
+```json
+"tasks": {
+  "qm-order-course-patches": { "status": "done", "by": "QM-ADULT", "at": "2026-09-20T14:02:00Z" },
+  "qm-reconcile-national-inventory": { "status": "blocked", "by": "ASPL-QM", "note": "waiting on council PO" }
+}
+```
+
+| field | meaning |
+|---|---|
+| `status` | `todo` · `doing` · `blocked` · `done`. Anything else reads as `todo` rather than throwing |
+| `by` | **a role id**, never a name. `npm run check:schedule` rejects a value that is not in `resources.csv` |
+| `at` | when the status last changed |
+| `note` | why it is blocked |
+
+**Keyed by activity id, not placement id.** 36 activities are placed more than once — `lunch` eleven times, and 19 presentations that are practiced at an SD then delivered at a weekend — so "done" against a placement would be ambiguous. No `staff_task` is placed twice, and only `staff_task` activities carry a status, so the key is unambiguous for exactly the set that uses it. Per-occurrence marks stay on the placement's `flags[]`.
+
+**Absent means `todo`,** so the map holds only what has been touched. It starts as `{}`, and a task dropped from the catalog stops taking up room.
+
+Two things to know if you change the storage path. `api/placements.php` rebuilds the saved document from an **explicit whitelist** on every write — a key missing from that list is silently dropped, and the change appears to save and then vanishes on reload. And everything there is decoded with `json_decode($s, true)`, which turns `{}` into an empty PHP *array* that re-encodes as `[]`; the responses re-cast it, because the client spreads this value. Both have tests in `tests/api.test.mjs`.
+
+## Progress — `src/progress.js`
+
+Pure, like `conflicts.js`; `npm run lint` keeps it that way. `progress({activities, events, tasks, asOf})` rolls up every staff task and answers *how far ahead are we*.
+
+A task's deadline is derived, never stored: its weekend tag (`before-sd2`, `sd3`, `course-w1`) resolves against `events.csv`. `before-sdN` is due when that weekend **starts** — the point is that it is finished before anyone arrives — and `sdN` is due when it **ends**. `post-course` has no deadline at all rather than a fabricated one, and is excluded from pace so that finishing it early cannot flatter the number.
+
+`aheadBy` is *tasks done with a deadline* minus *tasks whose deadline has passed*. Positive means the team is ahead of what the calendar asked for.
 
 ## Constraint — `constraints.csv`, `params` is JSON
 

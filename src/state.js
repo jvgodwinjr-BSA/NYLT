@@ -1,12 +1,13 @@
 // Single in-memory state + undo stack. Drag-and-drop only ever mutates `placements` (and custom activities).
-import { uid } from './util.js?v=5';
+import { uid } from './util.js?v=6';
 
 export const state = {
   pack: null, eventId: null,
   view: 'all', dayIndex: 0,
   placements: [], customActivities: [],
+  tasks: {}, // activity id -> { status, by, at, note }. Absent means `todo`.
   selectedId: null,
-  filters: { q: '', type: '', unplacedOnly: false },
+  filters: { q: '', type: '', unplacedOnly: false, hideDone: false },
   fileDirty: false, lastFileSave: null,
   roster: null, // Map<resource id, display name> once unlocked
 };
@@ -16,7 +17,7 @@ export const subscribe = (fn) => (subs.add(fn), () => subs.delete(fn));
 export const emit = (what = 'all') => subs.forEach((fn) => fn(what));
 
 const undoStack = [], redoStack = [];
-const snapshot = () => JSON.stringify({ placements: state.placements, customActivities: state.customActivities });
+const snapshot = () => JSON.stringify({ placements: state.placements, customActivities: state.customActivities, tasks: state.tasks });
 const restore = (s) => Object.assign(state, JSON.parse(s));
 export function mutate(fn) {
   undoStack.push(snapshot()); if (undoStack.length > 200) undoStack.shift();
@@ -45,7 +46,24 @@ export function addPlacement({ activity_id, event_id, track_id, day, start_min, 
 export function updatePlacement(id, patch) { mutate(() => Object.assign(state.placements.find((p) => p.id === id), patch)); }
 export function removePlacement(id) { mutate(() => { state.placements = state.placements.filter((p) => p.id !== id); if (state.selectedId === id) state.selectedId = null; }); }
 export function addCustomActivity(a) { mutate(() => state.customActivities.push(a)); }
-export function replaceSchedule({ placements = [], customActivities = [] }) { mutate(() => { state.placements = placements; state.customActivities = customActivities; state.selectedId = null; }); }
+export function replaceSchedule({ placements = [], customActivities = [], tasks = {} }) { mutate(() => { state.placements = placements; state.customActivities = customActivities; state.tasks = tasks ?? {}; state.selectedId = null; }); }
+
+/**
+ * Set (or clear) a task's status. `todo` removes the entry, so the map only ever holds real
+ * changes and a task dropped from the catalog stops taking up room.
+ *
+ * `by` is a role id — never a typed name. The roster turns it into a display name in the browser;
+ * the stored JSON and every export carry only the role, which is what keeps this inside the same
+ * rule as resources.csv.
+ */
+export function setTaskStatus(activityId, status, { by = '', note = '' } = {}) {
+  mutate(() => {
+    const next = { ...state.tasks };
+    if (!status || status === 'todo') delete next[activityId];
+    else next[activityId] = { status, ...(by ? { by } : {}), ...(note ? { note } : {}), at: new Date().toISOString() };
+    state.tasks = next;
+  });
+}
 export function select(id) { state.selectedId = id; emit('selection'); }
 export function setEvent(id) { state.eventId = id; state.selectedId = null; state.dayIndex = 0; emit('view'); }
 export function setView(view, dayIndex = state.dayIndex) { state.view = view; state.dayIndex = dayIndex; emit('view'); }

@@ -23,9 +23,13 @@ for (const f of js.filter((x) => x.startsWith('src/'))) {
   const t = readFileSync(f, 'utf8');
   if (/\brequire\s*\(/.test(t)) fail(`${f} uses require(). src/ is browser ES modules only.`);
 }
-const conflicts = readFileSync('src/conflicts.js', 'utf8');
-for (const bad of ['./state.js', './canvas.js', 'document.', 'window.']) {
-  if (conflicts.includes(bad)) fail(`src/conflicts.js references ${bad}. It must stay a pure function so tests and a future server can use it.`);
+// The pure rule engines. Keeping these free of DOM and state means the tests and a future
+// PHP/Node server can call them directly.
+for (const pure of ['src/conflicts.js', 'src/progress.js']) {
+  const t = readFileSync(pure, 'utf8');
+  for (const bad of ['./state.js', './canvas.js', 'document.', 'window.']) {
+    if (t.includes(bad)) fail(`${pure} references ${bad}. It must stay a pure function so tests and a future server can use it.`);
+  }
 }
 
 console.log(`  checked ${js.length} script(s)`);

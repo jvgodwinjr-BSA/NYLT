@@ -55,13 +55,25 @@ $file = $dir . '/' . $pack . '.json';
 
 $empty = [
     'format' => 'program-scheduler/schedule', 'version' => 0, 'pack' => $pack,
-    'placements' => [], 'customActivities' => [], 'savedAt' => null, 'savedBy' => null,
+    'placements' => [], 'customActivities' => [], 'tasks' => new stdClass(), 'savedAt' => null, 'savedBy' => null,
 ];
+
+/**
+ * `tasks` is a map keyed by activity id, and an empty map must stay `{}`.
+ *
+ * Everything here is decoded with json_decode($s, true), which turns `{}` into an empty PHP
+ * array — and an empty array re-encodes as `[]`. The client spreads this value, so handing it an
+ * array instead of an object is a real difference. Re-cast it on the way out.
+ */
+function withTasksAsObject(array $doc): array {
+    $doc['tasks'] = (object)(isset($doc['tasks']) && is_array($doc['tasks']) ? $doc['tasks'] : []);
+    return $doc;
+}
 
 if ($method === 'GET') {
     if (!is_file($file)) out(200, $empty);
     $data = json_decode((string)file_get_contents($file), true);
-    out(200, is_array($data) ? $data : $empty);
+    out(200, is_array($data) ? withTasksAsObject($data) : $empty);
 }
 
 if ($method !== 'PUT' && $method !== 'POST') out(405, ['error' => 'method_not_allowed']);
@@ -84,7 +96,7 @@ if (!$force && $sent !== $curVersion) {
     flock($fh, LOCK_UN); fclose($fh);
     out(409, [
         'error' => 'conflict', 'yourVersion' => $sent, 'currentVersion' => $curVersion,
-        'current' => is_array($cur) ? $cur : $empty,
+        'current' => is_array($cur) ? withTasksAsObject($cur) : $empty,
     ]);
 }
 
@@ -94,6 +106,11 @@ $next = [
     'pack' => $pack,
     'placements' => $body['placements'],
     'customActivities' => isset($body['customActivities']) && is_array($body['customActivities']) ? $body['customActivities'] : [],
+    // Task status, keyed by activity id. Must be listed here: this array is rebuilt from scratch on
+    // every write, so a key that is missing is silently dropped and the client sees its change
+    // save and then vanish on the next load.
+    // Cast, not a bare array: an empty PHP array encodes as [] and the client expects an object.
+    'tasks' => (object)(isset($body['tasks']) && is_array($body['tasks']) ? $body['tasks'] : []),
     'savedAt' => gmdate('c'),
     'savedBy' => substr((string)($body['savedBy'] ?? ''), 0, 40),
 ];

@@ -36,13 +36,13 @@ export function createApiStore({ endpoint = './api/placements.php', password }) 
       if (!r.ok) throw new ApiUnavailable(`Shared saving unavailable (HTTP ${r.status}).`, r.status);
       const d = await parse(r);
       version = Number(d.version) || 0;
-      return { placements: d.placements ?? [], customActivities: d.customActivities ?? [], version, savedAt: d.savedAt, savedBy: d.savedBy };
+      return { placements: d.placements ?? [], customActivities: d.customActivities ?? [], tasks: d.tasks ?? {}, version, savedAt: d.savedAt, savedBy: d.savedBy };
     },
 
     /** Version-checked write. Throws ApiConflict when someone else saved first. */
     async save(packId, data, { force = false, savedBy = '' } = {}) {
       let r;
-      const body = JSON.stringify({ version, placements: data.placements ?? [], customActivities: data.customActivities ?? [], savedBy });
+      const body = JSON.stringify({ version, placements: data.placements ?? [], customActivities: data.customActivities ?? [], tasks: data.tasks ?? {}, savedBy });
       try { r = await fetch(url(packId, force ? '&force=1' : ''), { method: 'PUT', headers: headers(), body }); }
       catch (e) { throw new ApiUnavailable(`Could not reach the site (${e.message}).`, 0); }
       if (r.status === 401) throw new ApiUnauthorized('The site rejected the shared password.');

@@ -1,7 +1,8 @@
 // Left rail: the catalog. Never consumes an item; shows how many times each is placed in the current event.
-import { TYPE_ORDER } from './config.js?v=5';
-import { state, activities, eventPlacements, setFilters } from './state.js?v=5';
-import { el, clear } from './util.js?v=5';
+import { TYPE_ORDER } from './config.js?v=6';
+import { state, activities, eventPlacements, setFilters, setTaskStatus } from './state.js?v=6';
+import { el, clear } from './util.js?v=6';
+import { isTask, taskStatus, TASK_STATUS_LABEL } from './progress.js?v=6';
 
 const TYPE_LABEL = { presentation: 'Presentations', meal: 'Meals', ceremony: 'Ceremonies', meeting: 'Meetings', outpost: 'Outpost', game: 'Games & activities', logistics: 'Logistics', staff_task: 'Staff tasks', other: 'Other' };
 
@@ -17,7 +18,10 @@ export function renderRail(root, { onQuickAdd } = {}) {
     el('button.chip', { class: 'chip' + (f.type ? '' : ' on'), onClick: () => setFilters({ type: '' }) }, 'All'),
     types.map((t) => el('button', { class: 'chip' + (f.type === t ? ' on' : ''), onClick: () => setFilters({ type: f.type === t ? '' : t }) }, TYPE_LABEL[t] ?? t)));
   const unplaced = el('label.rail-toggle', {}, el('input', { type: 'checkbox', checked: f.unplacedOnly, onChange: (e) => setFilters({ unplacedOnly: e.target.checked }) }), ' Only not yet placed in this event');
-  root.append(el('div.rail-head', {}, search, chips, unplaced));
+  // Most staff tasks are never placed on the clock, so "hide finished" is the filter that actually
+  // shrinks the list as the team works through it.
+  const hideDone = el('label.rail-toggle', {}, el('input', { type: 'checkbox', checked: f.hideDone, onChange: (e) => setFilters({ hideDone: e.target.checked }) }), ' Hide finished tasks');
+  root.append(el('div.rail-head', {}, search, chips, unplaced, hideDone));
 
   const q = f.q.trim().toLowerCase();
   const list = el('div.rail-list');
@@ -25,13 +29,21 @@ export function renderRail(root, { onQuickAdd } = {}) {
     if (f.type && f.type !== t) continue;
     const items = activities().filter((a) => a.type === t)
       .filter((a) => !q || `${a.name} ${a.tags.join(' ')} ${a.notes ?? ''}`.toLowerCase().includes(q))
-      .filter((a) => !f.unplacedOnly || !counts.get(a.id));
+      .filter((a) => !f.unplacedOnly || !counts.get(a.id))
+      .filter((a) => !f.hideDone || !(isTask(a) && taskStatus(state.tasks, a.id) === 'done'));
     if (!items.length) continue;
     list.append(el('h3.rail-group', {}, TYPE_LABEL[t] ?? t, el('span.count', {}, items.length)));
     for (const a of items) {
       const n = counts.get(a.id) ?? 0;
-      list.append(el('div.rail-item', { class: `rail-item type-${a.type}`, dataset: { activityId: a.id }, title: a.notes || a.name },
-        el('div.ri-name', {}, a.name),
+      const st = isTask(a) ? taskStatus(state.tasks, a.id) : null;
+      // One tap to finish, one to undo. Anything richer (who, blocked reason) is in the editor.
+      const dot = st ? el('button.ri-dot.no-drag', {
+        class: `ri-dot no-drag s-${st}`,
+        title: `${TASK_STATUS_LABEL[st]} — click to ${st === 'done' ? 'reopen' : 'mark done'}`,
+        onClick: (e) => { e.stopPropagation(); setTaskStatus(a.id, st === 'done' ? 'todo' : 'done', { by: state.tasks?.[a.id]?.by ?? '' }); },
+      }, st === 'done' ? '✓' : st === 'doing' ? '·' : st === 'blocked' ? '!' : '') : null;
+      list.append(el('div.rail-item', { class: `rail-item type-${a.type}${st && st !== 'todo' ? ' st-' + st : ''}`, dataset: { activityId: a.id }, title: a.notes || a.name },
+        el('div.ri-name', {}, dot, a.name),
         el('div.ri-meta', {}, `${a.duration_min} min`, a.delivery === 'TG' ? el('span.tag.tg', {}, 'TG / patrol') : null,
           a.group === 'C' ? el('span.tag', {}, 'flag') : null, a.soft_vs_hard === 'hard' ? null : el('span.tag.soft', {}, 'soft'),
           a.practice_sd ? el('span.tag', {}, `practice ${a.practice_sd}`) : null,

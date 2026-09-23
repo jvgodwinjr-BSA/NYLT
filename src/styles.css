@@ -128,3 +128,42 @@ body { font: 13px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 .empty-event { flex: none; max-width: 300px; border: 1px dashed var(--line); border-radius: 8px; padding: 14px; background: #fffdf5; }
 .empty-event strong { display: block; margin-bottom: 6px; }
 .empty-event p { margin: 6px 0 0; font-size: 12px; }
+
+/* ---------- task status ---------- */
+:root { --done: #2f8f4e; --doing: #1f5fbf; --blocked: #d7263d; }
+
+/* The rail dot: one tap to finish, one to reopen. .no-drag keeps it from starting a drag. */
+.ri-dot { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; margin-right: 5px;
+  border: 1.5px solid var(--line); border-radius: 50%; background: #fff; padding: 0; cursor: pointer; vertical-align: -2px;
+  font: 700 10px/1 system-ui, sans-serif; color: #fff; }
+.ri-dot:hover { border-color: var(--accent); }
+.ri-dot.s-done { background: var(--done); border-color: var(--done); }
+.ri-dot.s-doing { background: var(--doing); border-color: var(--doing); }
+.ri-dot.s-blocked { background: var(--blocked); border-color: var(--blocked); }
+.rail-item.st-done .ri-name { color: var(--muted); text-decoration: line-through; }
+.rail-item.st-blocked { border-left-color: var(--blocked); }
+.rail-item.st-doing { border-left-color: var(--doing); }
+
+.task-status { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
+.status-row { display: flex; gap: 4px; flex-wrap: wrap; }
+.status-btn { flex: 1; min-width: 62px; padding: 5px 6px; border: 1px solid var(--line); border-radius: 6px; background: #fff;
+  font-size: 11px; cursor: pointer; color: var(--text); }
+.status-btn:hover { border-color: var(--accent); }
+.status-btn.on { color: #fff; font-weight: 600; }
+.status-btn.s-done.on { background: var(--done); border-color: var(--done); }
+.status-btn.s-doing.on { background: var(--doing); border-color: var(--doing); }
+.status-btn.s-blocked.on { background: var(--blocked); border-color: var(--blocked); }
+.status-btn.s-todo.on { background: var(--muted); border-color: var(--muted); }
+
+/* ---------- progress panel ---------- */
+/* Ahead-of-pace is the headline, so it gets the weight. Green when ahead, amber when behind —
+   never red: this is a volunteer team, and a scolding number gets the tab closed. */
+.pace { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin: 6px 0 10px; background: #fff; }
+.pace.good { background: #eefaf1; border-color: var(--done); }
+.pace.bad { background: #fff8e8; border-color: var(--soft); }
+.pace-n { font-size: 22px; font-weight: 700; line-height: 1.1; }
+.pace.good .pace-n { color: var(--done); }
+.pace.bad .pace-n { color: #9a6b00; }
+.pace-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; margin-top: 6px; }
+.bar-fill { height: 100%; background: var(--done); transition: width .3s ease; }

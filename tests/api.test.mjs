@@ -103,3 +103,27 @@ test('the generated config holds a salt and a hash, never the password', () => {
   assert.match(php, /^<\?php/);
   assert.notDeepEqual(configFor(PW).salt, configFor(PW).salt, 'a fresh salt each time');
 });
+
+// The saved document is rebuilt from an explicit whitelist on every write, so a new field has to
+// be added there or it saves and silently disappears. That failure is invisible in the browser
+// until a reload, which is exactly the kind of thing a test should catch instead of a person.
+test('task status survives a round trip', opts(), async () => {
+  const tasks = { 'qm-order-patches': { status: 'done', by: 'QM-ADULT', at: '2026-09-20T14:02:00Z' } };
+  const w = await (await call('PUT', 'tsk', { version: 0, placements: [], customActivities: [], tasks })).json();
+  assert.equal(w.ok, true);
+  const d = await (await call('GET', 'tsk')).json();
+  assert.deepEqual(d.tasks, tasks, 'the tasks map came back exactly as sent');
+});
+
+test('an empty task map stays an object, not an array', opts(), async () => {
+  // JSON [] and {} are both "empty" in PHP but not in the browser: the client spreads this value.
+  await call('PUT', 'tsk2', { version: 0, placements: [], customActivities: [], tasks: {} });
+  const raw = await (await call('GET', 'tsk2')).text();
+  assert.match(raw, /"tasks":\{\}/, `expected an object, got: ${raw.slice(0, 200)}`);
+});
+
+test('a write that omits tasks does not crash, and reads back empty', opts(), async () => {
+  await call('PUT', 'tsk3', { version: 0, placements: [], customActivities: [] });
+  const d = await (await call('GET', 'tsk3')).json();
+  assert.deepEqual(d.tasks, {});
+});

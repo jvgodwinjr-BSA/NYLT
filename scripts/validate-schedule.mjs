@@ -45,6 +45,27 @@ for (const c of customs) {
 const byId = new Map([...packActivities, ...customs].map((a) => [a.id, a]));
 const evById = new Map(events.map((e) => [e.id, e]));
 
+// Task status. Wrong entries here are recoverable — a bad status just reads as "to do" — so
+// these are warnings, except a `tasks` that is not a map at all, which the client would spread.
+const tasksMap = doc.tasks;
+if (tasksMap !== undefined) {
+  if (Array.isArray(tasksMap) || typeof tasksMap !== 'object' || tasksMap === null) {
+    B(`"tasks" is ${Array.isArray(tasksMap) ? 'an array' : typeof tasksMap} — it must be an object keyed by activity id`);
+  } else {
+    const STATUSES = ['todo', 'doing', 'blocked', 'done'];
+    const roleIds = new Set(read('resources.csv').map((r) => r.id));
+    for (const [id, t] of Object.entries(tasksMap)) {
+      if (!byId.has(id)) W(`tasks: "${id}" is not an activity in the pack or in customActivities — its status will be ignored`);
+      else if (byId.get(id).type !== 'staff_task') W(`tasks: "${id}" is a ${byId.get(id).type}, not a staff_task — only tasks carry a status`);
+      if (!t || typeof t !== 'object') { W(`tasks: "${id}" is not an object`); continue; }
+      if (t.status && !STATUSES.includes(t.status)) W(`tasks: "${id}" has status "${t.status}" (expected ${STATUSES.join(', ')}) — it will read as "todo"`);
+      // The whole point of storing a role rather than a name: this is a public repo and the
+      // exports travel. A name here would be a leak the name guard cannot see.
+      if (t.by && !roleIds.has(t.by)) B(`tasks: "${id}" is credited to "${t.by}", which is not a role id in resources.csv — status carries roles, never names`);
+    }
+  }
+}
+
 const placements = doc.placements ?? [];
 const seenIds = new Set();
 for (const p of placements) {

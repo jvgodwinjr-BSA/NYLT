@@ -7,6 +7,15 @@ Notable changes to the Program Scheduler. Format follows [Keep a Changelog](http
 ### Added
 - **124 Quartermaster tasks in the catalog**, tagged `qm` plus a category and a suggested SD, so the rail's search surfaces the QM work for a weekend. `npm run import-qm-tasks` converts `scripts/qm-tasks-source.json` into extras rows; `npm run import-catalog` folds them into the pack. The pack now holds 213 activities.
 - Extras rows carry their own `source`, so a row's origin stays visible in `activities.csv`.
+- **Task status and a Progress panel.** Staff tasks now carry `todo` / `doing` / `blocked` / `done` with a role and a timestamp, set from a one-tap dot in the left rail or from the block editor. A **Progress** tab shows how far ahead of pace the team is, a per-weekend breakdown, and what the next weekend still needs.
+- Deadlines are derived, not maintained: a task's weekend tag resolves against `events.csv`. `before-sdN` is due when that weekend starts, `sdN` when it ends, and `post-course` has no deadline rather than a fabricated one — so finishing undated work early cannot flatter the pace number.
+- Status lives in the same schedule document as everything else (`tasks`, keyed by activity id), so it saves to the site with the same version check and there is nothing to keep in sync. Keyed by activity because 36 activities are placed more than once — `lunch` eleven times — while no staff task is, which makes the key unambiguous for exactly the set that uses it.
+- `who` is a role id, never a typed name, and `npm run check:schedule` rejects anything that is not in `resources.csv`. The status layer stays inside the same rule as the rest of the project.
+- A "hide finished" filter in the rail, which is what shrinks a 130-task list as the team works through it.
+
+### Fixed
+- `api/placements.php` returned an empty task map as `[]` rather than `{}`. Everything there is decoded with `json_decode($s, true)`, which turns `{}` into a PHP array that re-encodes as an array — and the client spreads that value. Caught by a test, not by a person.
+- Undo skipped task status: `snapshot()` in `state.js` serialised only placements and custom activities, so a status change could not be undone. Both are now covered by the browser test.
 
 ### Changed
 - **The site moved to its own domain.** Documented in [DEPLOY-HOSTINGER.md](docs/DEPLOY-HOSTINGER.md#changing-the-sites-domain), because the failure mode is misleading: the new hostname resolved correctly and still served Hostinger's parked page, since pointing DNS at Hostinger does not bind a hostname to a website. The fix is the site's own **Change Website Domain** — never "add a website", which would give the app an empty document root and strand the live schedule in the old folder. No code changed; every path the app fetches is already relative.
