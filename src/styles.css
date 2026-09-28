@@ -104,10 +104,28 @@ body { font: 13px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
 @media (max-width: 900px) {
   body { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr auto; grid-template-areas: "top" "rail" "canvas" "panel"; }
+  /* Grid items default to min-width:auto, so the canvas refuses to shrink below the width of a
+     three-lane day (48px gutter + 3 x 176px = 576px) and drags the whole page wider than the
+     phone. min-width:0 lets it shrink and scroll inside its own pane, which is what overflow:auto
+     on .canvas was always for. */
+  .rail, .canvas, .panel { min-width: 0; }
   .rail { max-height: 34vh; border-right: 0; border-bottom: 1px solid var(--line); }
   .panel { max-height: 30vh; border-left: 0; border-top: 1px solid var(--line); }
   .controls { flex-wrap: wrap; }
   #top { height: auto; padding: 8px 12px; flex-wrap: wrap; }
+  /* A <select> is sized by its longest option, and the event names are long ("SD1 — Senior
+     leadership + Troop Guides"). As a flex item it defaults to min-width:auto, so it refused to
+     shrink and pushed the header to 558px on a 390px phone — which makes the browser zoom the
+     whole app out to fit. Let it shrink and truncate instead. */
+  #top, #controls { min-width: 0; max-width: 100%; }
+  #controls .sel { min-width: 0; max-width: 45vw; }
+  /* The spacer pushes the save indicator to the right on a wide screen; on a phone make it a line
+     break instead, so "browser only (no password)" starts a new row rather than overhanging. */
+  #controls .spacer { flex: 0 0 100%; height: 0; }
+  /* The indicator is nowrap and ~166px; on the last row it still overhung. Give it its own line
+     and let it wrap. This is the line people must be able to read — it is how they know whether
+     their work is shared or stuck in one browser. */
+  #controls .save-state { flex: 0 0 100%; white-space: normal; }
   body { grid-template-rows: auto auto 1fr auto; }
 }
 .ghost.off { opacity: .5; border-style: dashed; }
@@ -167,3 +185,31 @@ body { font: 13px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 .pace-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
 .bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; margin-top: 6px; }
 .bar-fill { height: 100%; background: var(--done); transition: width .3s ease; }
+
+/* ---------- help overlay ---------- */
+/* Reuses .gate's dimmed backdrop. Sized so it is readable on a phone, where most youth staff
+   will open it, and scrolls internally rather than growing the page. */
+/* .gate is `display: grid; place-items: center`, whose implicit column sizes to max-content — so
+   a child with width:100% grows past a phone screen instead of fitting it. minmax(0, 1fr) pins the
+   column to the container and lets it shrink below its content's natural width. */
+.help-gate { align-items: flex-start; overflow-y: auto; padding: 4vh 12px; grid-template-columns: minmax(0, 1fr); justify-items: center; }
+.help-box { background: var(--panel); border-radius: 10px; padding: 16px 18px; max-width: 560px; width: 100%;
+  box-shadow: 0 8px 28px rgba(0,0,0,.2); }
+.help-body { max-height: 66vh; overflow-y: auto; margin-top: 10px; padding-right: 4px; }
+.help-s { margin: 0 0 14px; }
+.help-s h3 { margin: 0 0 4px; font-size: 13px; }
+.help-s p { margin: 0 0 6px; }
+.help-s ol { margin: 4px 0 6px; padding-left: 20px; }
+.help-s li { margin-bottom: 3px; }
+.help-dl { margin: 4px 0 0; display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; align-items: baseline; }
+.help-dl dt { font-weight: 600; }
+.help-dl dd { margin: 0; color: var(--muted); }
+/* On a phone the two-column list is what forces the overlay wider than the screen — the terms are
+   whole phrases ("A red block on the schedule"). Stack them instead. */
+@media (max-width: 460px) {
+  .help-gate { padding: 2vh 8px; }
+  .help-dl { grid-template-columns: 1fr; gap: 0 0; }
+  .help-dl dt { margin-top: 5px; }
+}
+.help-s code { background: var(--bg); border: 1px solid var(--line); border-radius: 3px; padding: 0 3px; font-size: 11px; }
+.help-note { margin-top: 4px; }

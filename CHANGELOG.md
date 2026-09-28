@@ -12,8 +12,12 @@ Notable changes to the Program Scheduler. Format follows [Keep a Changelog](http
 - Status lives in the same schedule document as everything else (`tasks`, keyed by activity id), so it saves to the site with the same version check and there is nothing to keep in sync. Keyed by activity because 36 activities are placed more than once — `lunch` eleven times — while no staff task is, which makes the key unambiguous for exactly the set that uses it.
 - `who` is a role id, never a typed name, and `npm run check:schedule` rejects anything that is not in `resources.csv`. The status layer stays inside the same rule as the rest of the project.
 - A "hide finished" filter in the rail, which is what shrinks a 130-task list as the team works through it.
+- **Help for the people who use the site, rather than build it.** A `? Help` button opens a short overlay, and the same sections print as a **one-page staff card** — one source, so the card cannot drift from the app. 23 of the 30 roles on this course are held by youth staff, and every one of the ten existing documents was written for someone who would run `npm run check`.
+- The card deliberately **does not carry the shared password**. A page handed to two dozen teenagers gets photographed and forwarded, and the password is the only thing protecting the encrypted names; it says "ask your ACD" instead.
+- [docs/USER-GUIDE.md](docs/USER-GUIDE.md) for adult staff — lanes, red and amber, tasks and pace, saving, two people at once, exports. The README's documentation index is now split into *using it* and *working on it*.
 
 ### Fixed
+- **The app zoomed itself out on a phone.** Three things each forced the page wider than the screen, so mobile browsers shrank everything to fit: the canvas could not shrink below a three-lane day (grid items default to `min-width: auto`), the event `<select>` was sized by its longest option name, and the save indicator is `nowrap` and overhung the last header row. The layout is now 390px wide on a 390px device. This matters most for the youth staff, who will be on phones.
 - `api/placements.php` returned an empty task map as `[]` rather than `{}`. Everything there is decoded with `json_decode($s, true)`, which turns `{}` into a PHP array that re-encodes as an array — and the client spreads that value. Caught by a test, not by a person.
 - Undo skipped task status: `snapshot()` in `state.js` serialised only placements and custom activities, so a status change could not be undone. Both are now covered by the browser test.
 

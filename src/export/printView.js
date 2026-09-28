@@ -1,7 +1,7 @@
 // Print view: one table per day of the current event. Hidden on screen; the only thing shown when printing.
-import { currentEvent, state } from '../state.js?v=6';
-import { runOfShowRows } from './runOfShow.js?v=6';
-import { el, clear } from '../util.js?v=6';
+import { currentEvent, state } from '../state.js?v=7';
+import { runOfShowRows } from './runOfShow.js?v=7';
+import { el, clear } from '../util.js?v=7';
 
 export function renderPrintView(root) {
   clear(root);

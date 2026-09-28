@@ -102,23 +102,36 @@ public/roster.enc           encrypted names
 api/                        placements.php — shared schedule storage (PHP, on the website)
 scripts/                    import-catalog (xlsx -> CSVs), encrypt-roster, api-password,
                             build, name-guard, validate-pack, lint, hooks/
-docs/                       DATA-MODEL, CONTENT-PACKS, DEPLOY-HOSTINGER, YOUTH-PROTECTION
-tests/                      node:test — conflict engine, roster crypto, guards
+docs/                       USER-GUIDE, DATA-MODEL, CONTENT-PACKS, DEPLOY-HOSTINGER, YOUTH-PROTECTION
+tests/                      node:test — conflict engine, progress maths, roster crypto, guards
 ```
 
 ## Documentation
 
+**Using the site** — no setup, nothing to install.
+
+| | |
+|---|---|
+| **? Help**, in the app | The shortest version, and the one youth staff will actually read. Prints a one-page staff card |
+| [docs/USER-GUIDE.md](docs/USER-GUIDE.md) | Lanes, red and amber, tasks and pace, saving, two people at once, exports |
+| [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Blank schedule, stale cache, names not showing, import failures |
+
+**Working on it** — assumes a checkout and `npm run check`.
+
 | | |
 |---|---|
 | [docs/YOUTH-PROTECTION.md](docs/YOUTH-PROTECTION.md) | **Read this first.** Where personal information may and may not go |
-| [docs/DATA-MODEL.md](docs/DATA-MODEL.md) | Activity, Resource, Event, Track, Placement, Constraint, and every rule |
+| [docs/DATA-MODEL.md](docs/DATA-MODEL.md) | Activity, Resource, Event, Track, Placement, Constraint, task status, and every rule |
 | [docs/CONTENT-PACKS.md](docs/CONTENT-PACKS.md) | Running a different program from the same engine |
-| [docs/DEPLOY-HOSTINGER.md](docs/DEPLOY-HOSTINGER.md) | Publishing, SSL, rotating the password, shared editing later |
+| [docs/DEPLOY-HOSTINGER.md](docs/DEPLOY-HOSTINGER.md) | Publishing, SSL, changing the domain, rotating the password |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Setup, the gate, how to make common changes |
 | [SECURITY.md](SECURITY.md) | Threat model, what the encryption does and does not protect |
-| [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Blank schedule, stale cache, names not showing, import failures |
 | [CLAUDE.md](CLAUDE.md) | Architectural invariants, for humans and for Claude Code |
 | [CHANGELOG.md](CHANGELOG.md) | What changed and when |
+
+Handing the site to youth staff: give them the link and the **password separately**. It is
+deliberately absent from the printed card, because a card given to two dozen teenagers gets
+photographed and forwarded, and the password is the only thing protecting the names.
 
 ## Out of scope for v1
 

@@ -1,17 +1,18 @@
-import { PACK_ID } from './config.js?v=6';
-import { loadPack } from './pack.js?v=6';
-import { state, subscribe, setEvent, setView, undo, redo, currentEvent, replaceSchedule, addPlacement, eventPlacements, select, activities } from './state.js?v=6';
-import { localStore, serializeSchedule, downloadText, pickFile } from './store/localStore.js?v=6';
-import { renderRail } from './catalog.js?v=6';
-import { renderCanvas } from './canvas.js?v=6';
-import { installDrag } from './drag.js?v=6';
-import { renderBlockEditor, showQuickActivity } from './editor.js?v=6';
-import { evaluate, byPlacement, coverageMatrix } from './conflicts.js?v=6';
-import { progress } from './progress.js?v=6';
-import { fetchRosterBlob, decryptRoster, cachePassword, cachedPassword, forgetRoster, cryptoAvailable } from './roster.js?v=6';
-import { createApiStore, ApiConflict, ApiUnauthorized } from './store/apiStore.js?v=6';
-import { el, clear } from './util.js?v=6';
-import { renderPrintView } from './export/printView.js?v=6';
+import { PACK_ID } from './config.js?v=7';
+import { loadPack } from './pack.js?v=7';
+import { state, subscribe, setEvent, setView, undo, redo, currentEvent, replaceSchedule, addPlacement, eventPlacements, select, activities } from './state.js?v=7';
+import { localStore, serializeSchedule, downloadText, pickFile } from './store/localStore.js?v=7';
+import { renderRail } from './catalog.js?v=7';
+import { renderCanvas } from './canvas.js?v=7';
+import { installDrag } from './drag.js?v=7';
+import { renderBlockEditor, showQuickActivity } from './editor.js?v=7';
+import { evaluate, byPlacement, coverageMatrix } from './conflicts.js?v=7';
+import { progress } from './progress.js?v=7';
+import { fetchRosterBlob, decryptRoster, cachePassword, cachedPassword, forgetRoster, cryptoAvailable } from './roster.js?v=7';
+import { createApiStore, ApiConflict, ApiUnauthorized } from './store/apiStore.js?v=7';
+import { el, clear } from './util.js?v=7';
+import { renderPrintView } from './export/printView.js?v=7';
+import { showHelp, renderHelpCard } from './help.js?v=7';
 
 const $ = (s) => document.querySelector(s);
 const LAST_EVENT_KEY = (packId) => `program-scheduler:last-event:${packId}`;
@@ -106,6 +107,7 @@ function renderHeader() {
     el('button', { class: 'btn' + (hard ? ' has-hard' : soft ? ' has-soft' : ''), onClick: () => { select(null); state.panelTab = 'issues'; render('view'); }, title: 'Open the Issues panel' },
       hard || soft ? `${hard ? hard + ' red' : ''}${hard && soft ? ' · ' : ''}${soft ? soft + ' amber' : ''}` : 'No issues'),
     el('span.spacer'),
+    el('button.btn', { onClick: openHelp, title: 'How to use this' }, '? Help'),
     el('button.btn', { onClick: undo, title: 'Ctrl/Cmd-Z' }, 'Undo'),
     el('button.btn', { onClick: redo, title: 'Ctrl/Cmd-Shift-Z' }, 'Redo'),
     el('button.btn', { onClick: saveJson }, 'Save JSON'),
@@ -158,8 +160,8 @@ async function loadJson() {
     render('view');
   } catch (e) { alert(`Could not load: ${e.message}`); }
 }
-async function exportRunOfShow() { const m = await import('./export/runOfShow.js?v=6'); m.exportRunOfShowCsv(); }
-async function exportSheetSync() { const m = await import('./export/sheetSync.js?v=6'); m.exportSheetSyncCsv(); }
+async function exportRunOfShow() { const m = await import('./export/runOfShow.js?v=7'); m.exportRunOfShowCsv(); }
+async function exportSheetSync() { const m = await import('./export/sheetSync.js?v=7'); m.exportSheetSyncCsv(); }
 
 // ---------- roster gate ----------
 function showGate(blob) {
@@ -197,6 +199,22 @@ function applyTemplate(key, dayDate) {
   }
   return n;
 }
+
+/**
+ * Print the one-page card. #print-view normally holds the run of show, so swap the help in, print,
+ * and put it back — otherwise the next Ctrl-P would silently print the card instead.
+ */
+function printHelpCard() {
+  const root = $('#print-view');
+  renderHelpCard(root);
+  const restore = () => { renderPrintView(root); window.removeEventListener('afterprint', restore); };
+  window.addEventListener('afterprint', restore);
+  window.print();
+  // Safari and some mobile browsers never fire afterprint; restore anyway so the run of show is
+  // not left replaced for the rest of the session.
+  setTimeout(restore, 2000);
+}
+function openHelp() { showHelp({ onPrint: printHelpCard }); }
 
 // ---------- right panel ----------
 const sdEvents = () => state.pack.constraints.find((c) => c.rule_type === 'practice_coverage')?.params?.sd_events ?? state.pack.events.filter((e) => /^SD/i.test(e.id)).map((e) => e.id);

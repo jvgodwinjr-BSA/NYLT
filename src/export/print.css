@@ -12,3 +12,14 @@ body { display: block !important; background: #fff !important; color: #000; font
 .ros tr { page-break-inside: avoid; }
 .ros tr.all td { font-weight: 600; background: #f6f6f6; }
 .ros .flag { color: #b00; }
+
+/* The one-page staff card, printed from the ? overlay. Two columns so it stays on one sheet. */
+.help-card { column-count: 2; column-gap: 10mm; margin-top: 4pt; }
+.help-card .help-s { break-inside: avoid; margin: 0 0 7pt; }
+.help-card h3 { font-size: 10.5pt; margin: 0 0 2pt; }
+.help-card p, .help-card li, .help-card dd { font-size: 9pt; margin: 0 0 3pt; }
+.help-card ol { margin: 2pt 0 3pt; padding-left: 14pt; }
+.help-card .help-dl { display: grid; grid-template-columns: auto 1fr; gap: 1pt 6pt; font-size: 9pt; }
+.help-card .help-dl dt { font-weight: 700; }
+.help-card .help-dl dd { margin: 0; color: #333; }
+.help-card code { border: 1px solid #bbb; border-radius: 2pt; padding: 0 1.5pt; font-size: 8.5pt; }
