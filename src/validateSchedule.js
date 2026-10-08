@@ -9,7 +9,7 @@
 //   BLOCKING  the placement cannot render, or a field the rail reads is missing. Do not load.
 //   WARNING   it loads but is probably wrong — off-grid times, a file for another pack.
 //   conflicts the engine's normal output. Not an import problem; shown so red blocks are no surprise.
-import { SLOT_MIN } from './config.js?v=12';
+import { SLOT_MIN } from './config.js?v=13';
 
 const REQUIRED = ['id', 'name', 'duration_min', 'type', 'audience', 'delivery', 'soft_vs_hard', 'tags'];
 const STATUSES = ['todo', 'doing', 'blocked', 'done'];

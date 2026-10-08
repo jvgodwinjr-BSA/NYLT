@@ -1,19 +1,19 @@
-import { PACK_ID } from './config.js?v=12';
-import { loadPack, normalizeActivity } from './pack.js?v=12';
-import { state, subscribe, setEvent, setView, undo, redo, currentEvent, replaceSchedule, addPlacement, eventPlacements, select, activities } from './state.js?v=12';
-import { localStore, serializeSchedule, downloadText, pickFile } from './store/localStore.js?v=12';
-import { renderRail } from './catalog.js?v=12';
-import { renderCanvas } from './canvas.js?v=12';
-import { installDrag } from './drag.js?v=12';
-import { renderBlockEditor, showQuickActivity } from './editor.js?v=12';
-import { evaluate, byPlacement, coverageMatrix } from './conflicts.js?v=12';
-import { validateSchedule } from './validateSchedule.js?v=12';
-import { progress } from './progress.js?v=12';
-import { fetchRosterBlob, decryptRoster, cachePassword, cachedPassword, forgetRoster, cryptoAvailable } from './roster.js?v=12';
-import { createApiStore, ApiConflict, ApiUnauthorized } from './store/apiStore.js?v=12';
-import { el, clear } from './util.js?v=12';
-import { renderPrintView, printableEvents } from './export/printView.js?v=12';
-import { showHelp, renderHelpCard } from './help.js?v=12';
+import { PACK_ID } from './config.js?v=13';
+import { loadPack, normalizeActivity } from './pack.js?v=13';
+import { state, subscribe, setEvent, setView, undo, redo, currentEvent, replaceSchedule, addPlacement, eventPlacements, select, activities } from './state.js?v=13';
+import { localStore, serializeSchedule, downloadText, pickFile } from './store/localStore.js?v=13';
+import { renderRail } from './catalog.js?v=13';
+import { renderCanvas } from './canvas.js?v=13';
+import { installDrag } from './drag.js?v=13';
+import { renderBlockEditor, showQuickActivity } from './editor.js?v=13';
+import { evaluate, byPlacement, coverageMatrix } from './conflicts.js?v=13';
+import { validateSchedule } from './validateSchedule.js?v=13';
+import { progress } from './progress.js?v=13';
+import { fetchRosterBlob, decryptRoster, cachePassword, cachedPassword, forgetRoster, cryptoAvailable } from './roster.js?v=13';
+import { createApiStore, ApiConflict, ApiUnauthorized } from './store/apiStore.js?v=13';
+import { el, clear } from './util.js?v=13';
+import { renderPrintView, printableEvents } from './export/printView.js?v=13';
+import { showHelp, renderHelpCard } from './help.js?v=13';
 
 const $ = (s) => document.querySelector(s);
 const LAST_EVENT_KEY = (packId) => `program-scheduler:last-event:${packId}`;
@@ -218,8 +218,8 @@ function showImportReport(filename, { blocking, warning, counts, removes = 0 }) 
     document.addEventListener('keydown', onKey);
   });
 }
-async function exportRunOfShow() { const m = await import('./export/runOfShow.js?v=12'); m.exportRunOfShowCsv(); }
-async function exportSheetSync() { const m = await import('./export/sheetSync.js?v=12'); m.exportSheetSyncCsv(); }
+async function exportRunOfShow() { const m = await import('./export/runOfShow.js?v=13'); m.exportRunOfShowCsv(); }
+async function exportSheetSync() { const m = await import('./export/sheetSync.js?v=13'); m.exportSheetSyncCsv(); }
 
 // ---------- roster gate ----------
 function showGate(blob) {

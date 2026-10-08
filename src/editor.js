@@ -1,8 +1,8 @@
 // Right-panel block editor and the Quick Activity form.
-import { TYPE_ORDER } from './config.js?v=12';
-import { state, activityById, currentEvent, updatePlacement, removePlacement, addCustomActivity, resourceLabel, select, setTaskStatus } from './state.js?v=12';
-import { el, fmtRange, minToHHMM, hhmmToMin, snap } from './util.js?v=12';
-import { isTask, taskStatus, taskEntry, taskKey, TASK_STATUSES, TASK_STATUS_LABEL } from './progress.js?v=12';
+import { TYPE_ORDER } from './config.js?v=13';
+import { state, activityById, currentEvent, updatePlacement, removePlacement, addCustomActivity, resourceLabel, select, setTaskStatus } from './state.js?v=13';
+import { el, fmtRange, minToHHMM, hhmmToMin, snap } from './util.js?v=13';
+import { isTask, taskStatus, taskEntry, taskKey, TASK_STATUSES, TASK_STATUS_LABEL } from './progress.js?v=13';
 
 /**
  * Status control for a staff task. Shown wherever a task is — on a placed block, and in the rail
@@ -45,6 +45,18 @@ export function renderTaskStatus(a, placement = null, { compact = false } = {}) 
     entry?.at ? el('p.muted', { style: { fontSize: '11px', margin: '4px 0 0' } }, `${TASK_STATUS_LABEL[cur]} · ${new Date(entry.at).toLocaleDateString()}`) : null);
 }
 
+/** A placement flag as a checkbox. Flags are a free-form array, so add and remove rather than set. */
+function flagBox(p, flag, label) {
+  return el('label', {}, el('input', {
+    type: 'checkbox', style: { width: 'auto' }, checked: p.flags?.includes(flag),
+    onChange: (e) => {
+      const f = new Set(p.flags ?? []);
+      e.target.checked ? f.add(flag) : f.delete(flag);
+      updatePlacement(p.id, { flags: [...f] });
+    },
+  }), ' ' + label);
+}
+
 export function renderBlockEditor(root, p, violations = []) {
   const a = activityById(p.activity_id);
   const ev = currentEvent();
@@ -69,9 +81,11 @@ export function renderBlockEditor(root, p, violations = []) {
         el('input', { type: 'checkbox', style: { width: 'auto' }, checked: p.resource_ids?.includes(r.id), onChange: (e) => {
           const ids = new Set(p.resource_ids ?? []); e.target.checked ? ids.add(r.id) : ids.delete(r.id); updatePlacement(p.id, { resource_ids: [...ids] }); } }),
         el('span', { title: r.role }, resourceLabel(r.id))))))),
-    el('label', {}, el('input', { type: 'checkbox', style: { width: 'auto' }, checked: p.flags?.includes('override'), onChange: (e) => {
-      const f = new Set(p.flags ?? []); e.target.checked ? f.add('override') : f.delete('override'); updatePlacement(p.id, { flags: [...f] }); } }),
-      ' Override: intentionally in this lane (silences the TG-delivery warning)'),
+    flagBox(p, 'override', 'Override: intentionally in this lane (silences the TG-delivery warning)'),
+    // overlap-ok was readable by the rule engine and settable by nothing, so a block flagged as
+    // deliberate parallel work looked identical to one nobody had looked at. Now it is a tick box
+    // like any other decision, and can be taken back.
+    flagBox(p, 'overlap-ok', 'Overlap is deliberate: this runs alongside whatever else is on (silences the lane clash)'),
     renderTaskStatus(a, p),
     el('label', {}, 'Notes', el('textarea', { rows: 2, onChange: (e) => updatePlacement(p.id, { notes: e.target.value }) }, p.notes ?? '')),
     el('div', { style: { display: 'flex', gap: '6px', marginTop: '10px' } },
