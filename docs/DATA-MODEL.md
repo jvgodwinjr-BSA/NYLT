@@ -88,9 +88,9 @@ A file written by **Save JSON** may carry `version` from whenever it was exporte
 | `at` | when the status last changed |
 | `note` | why it is blocked |
 
-**Keyed by activity id, not placement id.** 63 activities are placed more than once — `lunch` eleven times, and the presentations that are practiced at an SD then delivered at a weekend — so a per-placement "done" would be meaningless for them. Only `staff_task` activities carry a status, and per-occurrence marks stay on the placement's `flags[]`.
+**One key per occurrence.** A placement's status is keyed by its **placement id**; a task that is not on the schedule is keyed by its **activity id**. Several tasks genuinely repeat — `qm-work-block` is placed 17 times, and two QM routines run daily through Course Weekend 1 — so marking one morning's gear check done must not mark the next, and the Progress roll-up counts 17 work blocks rather than one. Per-occurrence marks that are not statuses still live on the placement's `flags[]`.
 
-**The gap this leaves.** The choice assumed no staff task would be placed twice, which was true when it was made and is no longer: `qm-work-block` is now placed 17 times, and two daily QM routines 3 and 2 times. Those share a single status, so marking one occurrence done marks them all, and the Progress roll-up counts each as one task rather than one per occurrence. Nothing is corrupted; the status is just coarser than the work. Keying by placement id for activities placed more than once would fix it.
+An activity-keyed entry is still read for a placed occurrence, so a schedule file saved before this change does not lose its statuses; nothing writes that shape any more.
 
 **Absent means `todo`,** so the map holds only what has been touched. It starts as `{}`, and a task dropped from the catalog stops taking up room.
 

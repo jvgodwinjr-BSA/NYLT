@@ -217,25 +217,28 @@ rail with a status instead of on the canvas.
 Only activities of type `staff_task` carry a status. Presentations, meals and ceremonies are events,
 not work items.
 
-### 5.1.1 Known limitation: recurring tasks share one status
+### 5.1.1 One status per occurrence
 
-Status is keyed by **activity id**, so an activity placed several times has **one** status covering
-all of them. For most tasks that is right — they happen once. It is wrong for anything recurring,
-and the schedule now has three:
+Status belongs to **an occurrence of work**, not to a catalog row.
 
-| Activity | Placed | Why |
-|---|---|---|
-| `qm-work-block` | 17× | A generic work block on every weekend, not a discrete task |
-| `qm-daily-morning-gear-check-flags-ceremonies-program` | 3× | Once each morning of W1 |
-| `qm-daily-deliver-retrieve-midday-restock-evening-reset` | 2× | Twice across W1 |
+- A task that is **not on the schedule** has one occurrence, keyed by its activity id
+- A task **placed on the schedule** has one occurrence per placement, keyed by the placement id
 
-Two consequences. Marking Friday's gear check done also marks Saturday's and Sunday's. And the
-Progress tab counts each of these as **one** task rather than one per occurrence, so the totals
-understate the real workload by roughly twenty placements.
+This matters because several tasks genuinely repeat. `qm-work-block` is placed 17 times across the
+course; two QM routines run every morning and midday of Course Weekend 1. Marking Friday's gear
+check done must not mark Saturday's, and the workload is 17 work blocks rather than one.
 
-Nothing is lost or corrupted — the schedule itself is unaffected, and the status is simply coarser
-than the work. The fix is to key status by placement id for activities that are placed more than
-once; it is not implemented.
+| Where | Behaviour |
+|---|---|
+| Block editor | Sets the status of **that block**. Says so explicitly when the same task runs on other days |
+| Rail, task scheduled once or not at all | A circle you tap to finish or reopen |
+| Rail, task scheduled several times | A tally — `1/3` — and no toggle, because one tap cannot sensibly finish seventeen blocks. Open each block instead |
+| Hide finished tasks | Hides a repeated task only when **every** occurrence is done |
+| Progress tab | Counts occurrences. A task placed 17 times is 17 pieces of work |
+
+A status written by a version of the app that keyed everything by activity id is still read for a
+placed occurrence, so an older saved file does not lose its statuses. Nothing writes that shape any
+more.
 
 ### 5.2 Setting it
 
@@ -519,9 +522,8 @@ The saved schedule document:
   "placements": [...], "customActivities": [...], "tasks": { ... } }
 ```
 
-`tasks` is keyed by **activity id**. 63 activities are placed more than once — `lunch` eleven
-times — and keying status by placement would have made "done" meaningless for them. That reasoning
-held when no staff task was placed twice; three now are, so see the limitation in §5.1.1.
+`tasks` is keyed by **placement id** for work that is on the schedule, and by **activity id** for
+work that is not — one key per occurrence. See §5.1.1.
 
 Full field-by-field detail: [DATA-MODEL.md](DATA-MODEL.md).
 

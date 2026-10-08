@@ -63,7 +63,7 @@ npm run check:schedule -- <file>  # validate a saved schedule against the pack
 ## Things that will bite you
 
 - Selecting a block re-renders the canvas and detaches the element. Read `getBoundingClientRect()` *before* calling `select()` (see the comment in `drag.js`).
-- `el()` ignores `null`/`false` children, but `append(...)` on an array containing `null` inserts the string "null" — filter first.
+- `el()` ignores `null`/`false` children, but `append(...)` on an array containing `null` inserts the string "null" — filter first. This shipped twice, visibly, so `npm run lint` now refuses a possibly-null **top-level** argument to `.append(`. A conditional nested inside an `el(...)` child is fine and is not flagged.
 - An all-hands lane blocks every other lane. That is the mechanism behind "at meals we are all together"; do not special-case meals.
 - Several roster surnames are ordinary English words (Lane is the worst — "lane" is the app's core concept). `scripts/common-name-words.txt` is a generic, committed allowlist that stops ~80 false positives; per-roster additions are `-word` lines in the gitignored `scripts/scrub.local.txt`. Never move that generic list's contents into a roster-derived list — that leaks the names it protects.
 - The schedule is stored on the website, not the browser. `localStore` is only the offline fallback. A save carries the version it was based on; the server refuses a stale one with 409 rather than clobbering, and the client shows a conflict banner. Do not "simplify" that away.

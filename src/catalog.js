@@ -1,10 +1,12 @@
 // Left rail: the catalog. Never consumes an item; shows how many times each is placed in the current event.
-import { TYPE_ORDER } from './config.js?v=8';
-import { state, activities, eventPlacements, setFilters, setTaskStatus } from './state.js?v=8';
-import { el, clear } from './util.js?v=8';
-import { isTask, taskStatus, TASK_STATUS_LABEL } from './progress.js?v=8';
+import { TYPE_ORDER } from './config.js?v=9';
+import { state, activities, eventPlacements, setFilters, setTaskStatus } from './state.js?v=9';
+import { el, clear } from './util.js?v=9';
+import { isTask, taskStatus, taskTally, taskKey, TASK_STATUS_LABEL } from './progress.js?v=9';
 
 const TYPE_LABEL = { presentation: 'Presentations', meal: 'Meals', ceremony: 'Ceremonies', meeting: 'Meetings', outpost: 'Outpost', game: 'Games & activities', logistics: 'Logistics', staff_task: 'Staff tasks', other: 'Other' };
+
+const taskEntryBy = (a, placement) => state.tasks?.[taskKey(a, placement)]?.by ?? '';
 
 export function renderRail(root, { onQuickAdd } = {}) {
   clear(root);
@@ -30,19 +32,30 @@ export function renderRail(root, { onQuickAdd } = {}) {
     const items = activities().filter((a) => a.type === t)
       .filter((a) => !q || `${a.name} ${a.tags.join(' ')} ${a.notes ?? ''}`.toLowerCase().includes(q))
       .filter((a) => !f.unplacedOnly || !counts.get(a.id))
-      .filter((a) => !f.hideDone || !(isTask(a) && taskStatus(state.tasks, a.id) === 'done'));
+      // "Finished" for a repeated task means every occurrence, not the first one.
+      .filter((a) => { if (!f.hideDone || !isTask(a)) return true; const t = taskTally(state.tasks, a, state.placements); return t.done < t.total; });
     if (!items.length) continue;
     list.append(el('h3.rail-group', {}, TYPE_LABEL[t] ?? t, el('span.count', {}, items.length)));
     for (const a of items) {
       const n = counts.get(a.id) ?? 0;
-      const st = isTask(a) ? taskStatus(state.tasks, a.id) : null;
-      // One tap to finish, one to undo. Anything richer (who, blocked reason) is in the editor.
-      const dot = st ? el('button.ri-dot.no-drag', {
-        class: `ri-dot no-drag s-${st}`,
-        title: `${TASK_STATUS_LABEL[st]} — click to ${st === 'done' ? 'reopen' : 'mark done'}`,
-        onClick: (e) => { e.stopPropagation(); setTaskStatus(a.id, st === 'done' ? 'todo' : 'done', { by: state.tasks?.[a.id]?.by ?? '' }); },
-      }, st === 'done' ? '✓' : st === 'doing' ? '·' : st === 'blocked' ? '!' : '') : null;
-      list.append(el('div.rail-item', { class: `rail-item type-${a.type}${st && st !== 'todo' ? ' st-' + st : ''}`, dataset: { activityId: a.id }, title: a.notes || a.name },
+      // A task scheduled once (or not at all) toggles from here. One scheduled several times has a
+      // status per block, so the rail shows the tally and sends you to the canvas rather than
+      // pretending one tap could finish all of them.
+      const tally = isTask(a) ? taskTally(state.tasks, a, state.placements) : null;
+      const single = tally && tally.total === 1;
+      const only = single ? (tally.placements[0] ?? null) : null;
+      const st = single ? taskStatus(state.tasks, a, only) : null;
+      const dot = !tally ? null
+        : single ? el('button.ri-dot.no-drag', {
+            class: `ri-dot no-drag s-${st}`,
+            title: `${TASK_STATUS_LABEL[st]} — click to ${st === 'done' ? 'reopen' : 'mark done'}`,
+            onClick: (e) => { e.stopPropagation(); setTaskStatus(taskKey(a, only), st === 'done' ? 'todo' : 'done', { by: taskEntryBy(a, only) }); },
+          }, st === 'done' ? '✓' : st === 'doing' ? '·' : st === 'blocked' ? '!' : '')
+        : el('span.ri-tally', { class: 'ri-tally' + (tally.done === tally.total ? ' all' : ''),
+            title: `Scheduled ${tally.total} times — open each block to set its status` },
+            `${tally.done}/${tally.total}`);
+      const rowState = single && st !== 'todo' ? ' st-' + st : (tally && tally.done === tally.total ? ' st-done' : '');
+      list.append(el('div.rail-item', { class: `rail-item type-${a.type}${rowState}`, dataset: { activityId: a.id }, title: a.notes || a.name },
         el('div.ri-name', {}, dot, a.name),
         el('div.ri-meta', {}, `${a.duration_min} min`, a.delivery === 'TG' ? el('span.tag.tg', {}, 'TG / patrol') : null,
           a.group === 'C' ? el('span.tag', {}, 'flag') : null, a.soft_vs_hard === 'hard' ? null : el('span.tag.soft', {}, 'soft'),

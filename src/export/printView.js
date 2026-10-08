@@ -3,9 +3,9 @@
 // Prints either the event on screen (the default, and what Ctrl-P gives you) or every weekend at
 // once, which is what you want on paper before staffing is settled — a reference you can mark up
 // in a room rather than six separate trips through the event dropdown.
-import { currentEvent, state, eventPlacements } from '../state.js?v=8';
-import { runOfShowRows } from './runOfShow.js?v=8';
-import { el, clear } from '../util.js?v=8';
+import { currentEvent, state, eventPlacements } from '../state.js?v=9';
+import { runOfShowRows } from './runOfShow.js?v=9';
+import { el, clear } from '../util.js?v=9';
 
 /** Events worth printing: the ones with something on the clock. An empty weekend is a wasted page. */
 export const printableEvents = () => (state.pack?.events ?? []).filter((e) => eventPlacements(e.id).length);
@@ -38,9 +38,12 @@ export function renderPrintView(root, { events } = {}) {
     // One cover line rather than repeating the stamp on every weekend, and it names what is here —
     // an empty weekend is left out, so the reader should be told which ones made it.
     const skipped = (state.pack?.events ?? []).filter((e) => !list.includes(e)).map((e) => e.id);
-    root.append(el('h1.print-cover', {}, 'All weekends — Run of show'),
+    // Filtered: append() turns a null argument into the literal string "null" on the page.
+    root.append(...[
+      el('h1.print-cover', {}, 'All weekends — Run of show'),
       el('p.muted', {}, `${list.map((e) => e.id).join(' · ')} · ${stamp}`),
-      skipped.length ? el('p.muted', {}, `Not included (nothing scheduled yet): ${skipped.join(', ')}.`) : null);
+      skipped.length ? el('p.muted', {}, `Not included (nothing scheduled yet): ${skipped.join(', ')}.`) : null,
+    ].filter(Boolean));
   }
   for (const ev of list) root.append(eventSection(ev));
   if (list.length === 1) root.querySelector('.print-event .muted')?.append(` · ${stamp}`);

@@ -1,7 +1,7 @@
 // Loads a content pack (five CSVs + optional templates.json) into typed objects.
-import { parseCsv } from './csv.js?v=8';
-import { DAY_START_MIN, DAY_END_MIN, SLOT_MIN, ASSET_V } from './config.js?v=8';
-import { parseLocal, addDays, dayLabel } from './util.js?v=8';
+import { parseCsv } from './csv.js?v=9';
+import { DAY_START_MIN, DAY_END_MIN, SLOT_MIN, ASSET_V } from './config.js?v=9';
+import { parseLocal, addDays, dayLabel } from './util.js?v=9';
 
 const safeJson = (s) => { try { return s ? JSON.parse(s) : {}; } catch { return {}; } };
 const bool = (v) => /^(true|1|yes|y)$/i.test(String(v).trim());

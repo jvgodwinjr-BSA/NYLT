@@ -32,6 +32,37 @@ for (const pure of ['src/conflicts.js', 'src/progress.js']) {
   }
 }
 
+// append() with a null argument writes the literal string "null" into the page — el() filters its
+// own children, a direct .append(...) does not. This has shipped twice, so it is a rule now.
+//
+// Only a TOP-LEVEL argument matters: `append(el('p', {}, x ? y : null))` is fine, because the null
+// is el()'s child and el() drops it. So the arguments are split at depth-zero commas, skipping
+// strings and template literals, rather than pattern-matched across the whole call.
+function topLevelArgs(text, from) {
+  const args = [];
+  let depth = 0, start = from, quote = null;
+  for (let i = from; i < text.length; i++) {
+    const c = text[i];
+    if (quote) { if (c === '\\') i++; else if (c === quote) quote = null; continue; }
+    if (c === '"' || c === "'" || c === '`') { quote = c; continue; }
+    if (c === '(' || c === '[' || c === '{') depth++;
+    else if (c === ')' && depth === 0) { args.push(text.slice(start, i)); return args; }
+    else if (c === ')' || c === ']' || c === '}') depth--;
+    else if (c === ',' && depth === 0) { args.push(text.slice(start, i)); start = i + 1; }
+  }
+  return args;
+}
+for (const f of js.filter((x) => x.startsWith('src/'))) {
+  const t = readFileSync(f, 'utf8');
+  for (let i = t.indexOf('.append('); i !== -1; i = t.indexOf('.append(', i + 1)) {
+    for (const arg of topLevelArgs(t, i + '.append('.length)) {
+      if (!/(^|\?[^?]*):\s*null\s*$|^\s*null\s*$/.test(arg.trim())) continue;
+      fail(`${f}:${t.slice(0, i).split('\n').length} passes a possibly-null argument to append(), which inserts the string "null". Spread a .filter(Boolean) list instead.`);
+      break;
+    }
+  }
+}
+
 console.log(`  checked ${js.length} script(s)`);
 if (errors) { console.error(`\nlint FAILED: ${errors} error(s)`); process.exit(1); }
 console.log('lint OK');
