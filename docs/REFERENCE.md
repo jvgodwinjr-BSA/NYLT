@@ -376,6 +376,23 @@ The site is the record. **Save JSON** is for handing a copy to someone, or keepi
 replace a full schedule with nothing, and the push to the server is forced, so it overwrites the
 shared copy too.
 
+**The app checks first.** `src/validateSchedule.js` runs on the chosen file before anything is
+replaced, and the same module backs `npm run check:schedule` — one implementation, so the terminal
+and the app cannot disagree. A report appears whenever there is anything to say:
+
+| Situation | What happens |
+|---|---|
+| Clean file, same size or larger | Loads with no dialog |
+| Warnings only | A report headed *Check this before loading* |
+| Blocking problems | A report headed *This file has problems*, override styled as dangerous |
+| Fewer placements than you have | A report headed *This removes N placements*, saying how many go and that it affects everyone. The confirm button reads **Replace and lose N** |
+
+Validity and destructiveness are separate questions: `"placements": []` passes every check and is
+the single worst file to load, which is why losing placements opens the report on its own.
+
+Cancel is the primary action and `Esc` does the same. **Save mine to a file first** exports the
+current schedule without leaving the dialog.
+
 Before loading anything you did not just export:
 
 ```

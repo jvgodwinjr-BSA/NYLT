@@ -1,8 +1,8 @@
 // Left rail: the catalog. Never consumes an item; shows how many times each is placed in the current event.
-import { TYPE_ORDER } from './config.js?v=10';
-import { state, activities, eventPlacements, setFilters, setTaskStatus } from './state.js?v=10';
-import { el, clear } from './util.js?v=10';
-import { isTask, taskStatus, taskTally, taskKey, TASK_STATUS_LABEL } from './progress.js?v=10';
+import { TYPE_ORDER } from './config.js?v=12';
+import { state, activities, eventPlacements, setFilters, setTaskStatus } from './state.js?v=12';
+import { el, clear } from './util.js?v=12';
+import { isTask, taskStatus, taskTally, taskKey, TASK_STATUS_LABEL } from './progress.js?v=12';
 
 const TYPE_LABEL = { presentation: 'Presentations', meal: 'Meals', ceremony: 'Ceremonies', meeting: 'Meetings', outpost: 'Outpost', game: 'Games & activities', logistics: 'Logistics', staff_task: 'Staff tasks', other: 'Other' };
 

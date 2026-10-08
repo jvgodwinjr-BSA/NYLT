@@ -3,9 +3,9 @@
 // Prints either the event on screen (the default, and what Ctrl-P gives you) or every weekend at
 // once, which is what you want on paper before staffing is settled — a reference you can mark up
 // in a room rather than six separate trips through the event dropdown.
-import { currentEvent, state, eventPlacements } from '../state.js?v=10';
-import { runOfShowRows } from './runOfShow.js?v=10';
-import { el, clear } from '../util.js?v=10';
+import { currentEvent, state, eventPlacements } from '../state.js?v=12';
+import { runOfShowRows } from './runOfShow.js?v=12';
+import { el, clear } from '../util.js?v=12';
 
 /** Events worth printing: the ones with something on the clock. An empty weekend is a wasted page. */
 export const printableEvents = () => (state.pack?.events ?? []).filter((e) => eventPlacements(e.id).length);

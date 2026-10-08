@@ -1,8 +1,8 @@
 // Right-panel block editor and the Quick Activity form.
-import { TYPE_ORDER } from './config.js?v=10';
-import { state, activityById, currentEvent, updatePlacement, removePlacement, addCustomActivity, resourceLabel, select, setTaskStatus } from './state.js?v=10';
-import { el, fmtRange, minToHHMM, hhmmToMin, snap } from './util.js?v=10';
-import { isTask, taskStatus, taskEntry, taskKey, TASK_STATUSES, TASK_STATUS_LABEL } from './progress.js?v=10';
+import { TYPE_ORDER } from './config.js?v=12';
+import { state, activityById, currentEvent, updatePlacement, removePlacement, addCustomActivity, resourceLabel, select, setTaskStatus } from './state.js?v=12';
+import { el, fmtRange, minToHHMM, hhmmToMin, snap } from './util.js?v=12';
+import { isTask, taskStatus, taskEntry, taskKey, TASK_STATUSES, TASK_STATUS_LABEL } from './progress.js?v=12';
 
 /**
  * Status control for a staff task. Shown wherever a task is — on a placed block, and in the rail

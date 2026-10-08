@@ -1,6 +1,6 @@
 // Single in-memory state + undo stack. Drag-and-drop only ever mutates `placements` (and custom activities).
-import { uid } from './util.js?v=10';
-import { normalizeActivity } from './pack.js?v=10';
+import { uid } from './util.js?v=12';
+import { normalizeActivity } from './pack.js?v=12';
 
 export const state = {
   pack: null, eventId: null,

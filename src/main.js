@@ -1,18 +1,19 @@
-import { PACK_ID } from './config.js?v=10';
-import { loadPack, normalizeActivity } from './pack.js?v=10';
-import { state, subscribe, setEvent, setView, undo, redo, currentEvent, replaceSchedule, addPlacement, eventPlacements, select, activities } from './state.js?v=10';
-import { localStore, serializeSchedule, downloadText, pickFile } from './store/localStore.js?v=10';
-import { renderRail } from './catalog.js?v=10';
-import { renderCanvas } from './canvas.js?v=10';
-import { installDrag } from './drag.js?v=10';
-import { renderBlockEditor, showQuickActivity } from './editor.js?v=10';
-import { evaluate, byPlacement, coverageMatrix } from './conflicts.js?v=10';
-import { progress } from './progress.js?v=10';
-import { fetchRosterBlob, decryptRoster, cachePassword, cachedPassword, forgetRoster, cryptoAvailable } from './roster.js?v=10';
-import { createApiStore, ApiConflict, ApiUnauthorized } from './store/apiStore.js?v=10';
-import { el, clear } from './util.js?v=10';
-import { renderPrintView, printableEvents } from './export/printView.js?v=10';
-import { showHelp, renderHelpCard } from './help.js?v=10';
+import { PACK_ID } from './config.js?v=12';
+import { loadPack, normalizeActivity } from './pack.js?v=12';
+import { state, subscribe, setEvent, setView, undo, redo, currentEvent, replaceSchedule, addPlacement, eventPlacements, select, activities } from './state.js?v=12';
+import { localStore, serializeSchedule, downloadText, pickFile } from './store/localStore.js?v=12';
+import { renderRail } from './catalog.js?v=12';
+import { renderCanvas } from './canvas.js?v=12';
+import { installDrag } from './drag.js?v=12';
+import { renderBlockEditor, showQuickActivity } from './editor.js?v=12';
+import { evaluate, byPlacement, coverageMatrix } from './conflicts.js?v=12';
+import { validateSchedule } from './validateSchedule.js?v=12';
+import { progress } from './progress.js?v=12';
+import { fetchRosterBlob, decryptRoster, cachePassword, cachedPassword, forgetRoster, cryptoAvailable } from './roster.js?v=12';
+import { createApiStore, ApiConflict, ApiUnauthorized } from './store/apiStore.js?v=12';
+import { el, clear } from './util.js?v=12';
+import { renderPrintView, printableEvents } from './export/printView.js?v=12';
+import { showHelp, renderHelpCard } from './help.js?v=12';
 
 const $ = (s) => document.querySelector(s);
 const LAST_EVENT_KEY = (packId) => `program-scheduler:last-event:${packId}`;
@@ -151,19 +152,74 @@ function saveJson() {
   if (!state.remote) state.fileDirty = false;
   render('view');
 }
+/**
+ * Loading replaces the whole schedule and force-pushes it to the site, so a bad file does not just
+ * inconvenience the person who chose it — it overwrites everyone's copy. Two problems that reached
+ * the live schedule this way went unnoticed for weeks: placements on a lane that does not exist,
+ * and custom activities missing the fields the rail reads. Both were reported by
+ * `npm run check:schedule` the whole time, by people who never ran it.
+ *
+ * So the same checks run here, before anything is replaced, and a blocking problem has to be
+ * overridden deliberately rather than by not knowing.
+ */
 async function loadJson() {
   const f = await pickFile('.json'); if (!f) return;
-  try {
-    const data = JSON.parse(f.text);
-    if (data.format !== 'program-scheduler/schedule') throw new Error('Not a schedule file');
-    if (data.pack && data.pack !== state.pack.id && !confirm(`This file is for pack "${data.pack}", current pack is "${state.pack.id}". Load anyway?`)) return;
-    replaceSchedule(data); state.fileDirty = false; state.lastFileSave = `loaded ${f.name}`;
-    if (state.remote) await remoteSave(true); // the file the person just chose wins
-    render('view');
-  } catch (e) { alert(`Could not load: ${e.message}`); }
+  let data;
+  try { data = JSON.parse(f.text); }
+  catch (e) { alert(`Could not read ${f.name}: ${e.message}`); return; }
+
+  const { blocking, warning, counts } = validateSchedule({ doc: data, pack: state.pack });
+  if (data.format !== 'program-scheduler/schedule') { alert(`${f.name} is not a schedule file.`); return; }
+  if (data.pack && data.pack !== state.pack.id
+    && !confirm(`This file is for pack "${data.pack}", current pack is "${state.pack.id}". Load anyway?`)) return;
+
+  // A file that is perfectly valid can still be the worst one to load: `"placements": []` passes
+  // every check and replaces everyone's schedule with nothing. Correctness and destructiveness are
+  // different questions, so losing placements opens the dialog on its own.
+  const removes = state.placements.length - counts.placements;
+  if ((blocking.length || warning.length || removes > 0)
+    && !await showImportReport(f.name, { blocking, warning, counts, removes })) return;
+
+  replaceSchedule(data); state.fileDirty = false; state.lastFileSave = `loaded ${f.name}`;
+  if (state.remote) await remoteSave(true); // the file the person just chose wins
+  render('view');
 }
-async function exportRunOfShow() { const m = await import('./export/runOfShow.js?v=10'); m.exportRunOfShowCsv(); }
-async function exportSheetSync() { const m = await import('./export/sheetSync.js?v=10'); m.exportSheetSyncCsv(); }
+
+/** @returns {Promise<boolean>} whether to go ahead. Resolves false on cancel or Esc. */
+function showImportReport(filename, { blocking, warning, counts, removes = 0 }) {
+  return new Promise((resolve) => {
+    const done = (go) => { overlay.remove(); document.removeEventListener('keydown', onKey); resolve(go); };
+    const onKey = (e) => { if (e.key === 'Escape') done(false); };
+    const list = (label, items, cls) => items.length ? el('div.imp-group', {},
+      el('h3', { class: cls }, `${items.length} ${label}`),
+      el('ul', {}, items.slice(0, 12).map((t) => el('li', {}, t))),
+      items.length > 12 ? el('p.muted', {}, `… and ${items.length - 12} more. Run npm run check:schedule for the full list.`) : null) : null;
+
+    const overlay = el('div.gate.imp-gate', {}, el('div.imp-box', {},
+      el('h2', { style: { margin: '0 0 2px' } },
+        blocking.length ? 'This file has problems'
+          : removes > 0 ? `This removes ${removes} placement${removes === 1 ? '' : 's'}`
+          : 'Check this before loading'),
+      el('p.muted', { style: { margin: 0 } },
+        `${filename} — ${counts.placements} placements, ${counts.customActivities} custom activities. `
+        + 'Loading replaces everything on screen and overwrites the copy on the site.'),
+      removes > 0 ? el('p', { class: 'imp-loss' },
+        `You have ${state.placements.length} placements now; this file has ${counts.placements}. `
+        + `${removes} would be gone, for everyone.`) : null,
+      el('div.imp-body', {}, ...[list('blocking problem(s)', blocking, 'bad'), list('warning(s)', warning, 'warn')].filter(Boolean)),
+      blocking.length ? el('p.muted', { style: { fontSize: '11px' } },
+        'Blocking means a placement cannot render, or a field the left rail reads is missing. Loading anyway is how bad data gets onto the shared schedule.') : null,
+      el('div', { style: { display: 'flex', gap: '6px', marginTop: '12px', flexWrap: 'wrap' } },
+        el('button.btn.primary', { onClick: () => done(false) }, 'Cancel'),
+        el('button.btn', { onClick: () => { saveJson(); } }, 'Save mine to a file first'),
+        el('button.btn', { class: 'btn' + (blocking.length || removes > 0 ? ' danger' : ''), onClick: () => done(true) },
+          blocking.length ? 'Load anyway' : removes > 0 ? `Replace and lose ${removes}` : 'Load'))));
+    document.body.append(overlay);
+    document.addEventListener('keydown', onKey);
+  });
+}
+async function exportRunOfShow() { const m = await import('./export/runOfShow.js?v=12'); m.exportRunOfShowCsv(); }
+async function exportSheetSync() { const m = await import('./export/sheetSync.js?v=12'); m.exportSheetSyncCsv(); }
 
 // ---------- roster gate ----------
 function showGate(blob) {

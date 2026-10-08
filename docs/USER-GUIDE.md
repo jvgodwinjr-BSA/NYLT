@@ -106,6 +106,35 @@ else will ever see it.
 **Save JSON** is not a backup you are required to take — it is for handing a copy to someone or
 keeping a snapshot. The site is the record.
 
+## Loading a file
+
+**Load JSON replaces everything** — it does not merge, and it pushes the result to the site, so it
+overwrites what everyone else sees. It is the only button here that can destroy work.
+
+The app checks the file first. A clean one loads straight through; anything else stops at a report:
+
+| What it finds | What you see |
+|---|---|
+| Nothing wrong | Loads, no dialog |
+| Warnings | *Check this before loading* — times off the 15-minute grid, a file for another pack |
+| Blocking problems | *This file has problems* — a lane or activity that does not exist, missing fields |
+| Fewer placements than you have | *This removes N placements*, and the confirm button reads **Replace and lose N** |
+
+Cancel is the default and `Esc` does the same. **Save mine to a file first** exports your current
+schedule without closing the dialog.
+
+That last row matters most: a file containing no placements is perfectly valid and will wipe
+everything, for everyone. Being correct and being safe are different things.
+
+If you keep a checkout, you can run the same checks before you even open the site:
+
+```
+npm run check:schedule -- ~/Downloads/the-file.json
+```
+
+It exits 0 when the file is safe and 1 when it is not, and it previews the conflicts you would see
+after loading.
+
 ## Two people at once
 
 Whoever saves first wins. The second person gets a banner offering **Use theirs**, **Keep mine**,
