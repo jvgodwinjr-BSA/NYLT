@@ -1,8 +1,8 @@
 // Left rail: the catalog. Never consumes an item; shows how many times each is placed in the current event.
-import { TYPE_ORDER } from './config.js?v=9';
-import { state, activities, eventPlacements, setFilters, setTaskStatus } from './state.js?v=9';
-import { el, clear } from './util.js?v=9';
-import { isTask, taskStatus, taskTally, taskKey, TASK_STATUS_LABEL } from './progress.js?v=9';
+import { TYPE_ORDER } from './config.js?v=10';
+import { state, activities, eventPlacements, setFilters, setTaskStatus } from './state.js?v=10';
+import { el, clear } from './util.js?v=10';
+import { isTask, taskStatus, taskTally, taskKey, TASK_STATUS_LABEL } from './progress.js?v=10';
 
 const TYPE_LABEL = { presentation: 'Presentations', meal: 'Meals', ceremony: 'Ceremonies', meeting: 'Meetings', outpost: 'Outpost', game: 'Games & activities', logistics: 'Logistics', staff_task: 'Staff tasks', other: 'Other' };
 
@@ -30,7 +30,7 @@ export function renderRail(root, { onQuickAdd } = {}) {
   for (const t of types) {
     if (f.type && f.type !== t) continue;
     const items = activities().filter((a) => a.type === t)
-      .filter((a) => !q || `${a.name} ${a.tags.join(' ')} ${a.notes ?? ''}`.toLowerCase().includes(q))
+      .filter((a) => !q || `${a.name} ${(a.tags ?? []).join(' ')} ${a.notes ?? ''}`.toLowerCase().includes(q))
       .filter((a) => !f.unplacedOnly || !counts.get(a.id))
       // "Finished" for a repeated task means every occurrence, not the first one.
       .filter((a) => { if (!f.hideDone || !isTask(a)) return true; const t = taskTally(state.tasks, a, state.placements); return t.done < t.total; });

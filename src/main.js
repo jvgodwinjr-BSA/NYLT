@@ -1,18 +1,18 @@
-import { PACK_ID } from './config.js?v=9';
-import { loadPack } from './pack.js?v=9';
-import { state, subscribe, setEvent, setView, undo, redo, currentEvent, replaceSchedule, addPlacement, eventPlacements, select, activities } from './state.js?v=9';
-import { localStore, serializeSchedule, downloadText, pickFile } from './store/localStore.js?v=9';
-import { renderRail } from './catalog.js?v=9';
-import { renderCanvas } from './canvas.js?v=9';
-import { installDrag } from './drag.js?v=9';
-import { renderBlockEditor, showQuickActivity } from './editor.js?v=9';
-import { evaluate, byPlacement, coverageMatrix } from './conflicts.js?v=9';
-import { progress } from './progress.js?v=9';
-import { fetchRosterBlob, decryptRoster, cachePassword, cachedPassword, forgetRoster, cryptoAvailable } from './roster.js?v=9';
-import { createApiStore, ApiConflict, ApiUnauthorized } from './store/apiStore.js?v=9';
-import { el, clear } from './util.js?v=9';
-import { renderPrintView, printableEvents } from './export/printView.js?v=9';
-import { showHelp, renderHelpCard } from './help.js?v=9';
+import { PACK_ID } from './config.js?v=10';
+import { loadPack, normalizeActivity } from './pack.js?v=10';
+import { state, subscribe, setEvent, setView, undo, redo, currentEvent, replaceSchedule, addPlacement, eventPlacements, select, activities } from './state.js?v=10';
+import { localStore, serializeSchedule, downloadText, pickFile } from './store/localStore.js?v=10';
+import { renderRail } from './catalog.js?v=10';
+import { renderCanvas } from './canvas.js?v=10';
+import { installDrag } from './drag.js?v=10';
+import { renderBlockEditor, showQuickActivity } from './editor.js?v=10';
+import { evaluate, byPlacement, coverageMatrix } from './conflicts.js?v=10';
+import { progress } from './progress.js?v=10';
+import { fetchRosterBlob, decryptRoster, cachePassword, cachedPassword, forgetRoster, cryptoAvailable } from './roster.js?v=10';
+import { createApiStore, ApiConflict, ApiUnauthorized } from './store/apiStore.js?v=10';
+import { el, clear } from './util.js?v=10';
+import { renderPrintView, printableEvents } from './export/printView.js?v=10';
+import { showHelp, renderHelpCard } from './help.js?v=10';
 
 const $ = (s) => document.querySelector(s);
 const LAST_EVENT_KEY = (packId) => `program-scheduler:last-event:${packId}`;
@@ -162,8 +162,8 @@ async function loadJson() {
     render('view');
   } catch (e) { alert(`Could not load: ${e.message}`); }
 }
-async function exportRunOfShow() { const m = await import('./export/runOfShow.js?v=9'); m.exportRunOfShowCsv(); }
-async function exportSheetSync() { const m = await import('./export/sheetSync.js?v=9'); m.exportSheetSyncCsv(); }
+async function exportRunOfShow() { const m = await import('./export/runOfShow.js?v=10'); m.exportRunOfShowCsv(); }
+async function exportSheetSync() { const m = await import('./export/sheetSync.js?v=10'); m.exportSheetSyncCsv(); }
 
 // ---------- roster gate ----------
 function showGate(blob) {
@@ -372,7 +372,7 @@ async function init() {
   try { state.pack = await loadPack(PACK_ID); }
   catch (e) { $('#canvas').textContent = `Could not load content pack: ${e.message}`; return; }
   const saved = localStore.load(PACK_ID);
-  if (saved) { state.placements = saved.placements ?? []; state.customActivities = saved.customActivities ?? []; state.tasks = saved.tasks ?? {}; }
+  if (saved) { state.placements = saved.placements ?? []; state.customActivities = (saved.customActivities ?? []).map(normalizeActivity); state.tasks = saved.tasks ?? {}; }
   const q = new URLSearchParams(location.search);
   state.eventId = chooseEvent(q.get('event'));
   state.rosterBlob = await fetchRosterBlob();

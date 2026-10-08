@@ -1,5 +1,6 @@
 // Single in-memory state + undo stack. Drag-and-drop only ever mutates `placements` (and custom activities).
-import { uid } from './util.js?v=9';
+import { uid } from './util.js?v=10';
+import { normalizeActivity } from './pack.js?v=10';
 
 export const state = {
   pack: null, eventId: null,
@@ -45,8 +46,8 @@ export function addPlacement({ activity_id, event_id, track_id, day, start_min, 
 }
 export function updatePlacement(id, patch) { mutate(() => Object.assign(state.placements.find((p) => p.id === id), patch)); }
 export function removePlacement(id) { mutate(() => { state.placements = state.placements.filter((p) => p.id !== id); if (state.selectedId === id) state.selectedId = null; }); }
-export function addCustomActivity(a) { mutate(() => state.customActivities.push(a)); }
-export function replaceSchedule({ placements = [], customActivities = [], tasks = {} }) { mutate(() => { state.placements = placements; state.customActivities = customActivities; state.tasks = tasks ?? {}; state.selectedId = null; }); }
+export function addCustomActivity(a) { mutate(() => state.customActivities.push(normalizeActivity(a))); }
+export function replaceSchedule({ placements = [], customActivities = [], tasks = {} }) { mutate(() => { state.placements = placements; state.customActivities = customActivities.map(normalizeActivity); state.tasks = tasks ?? {}; state.selectedId = null; }); }
 
 /**
  * Set (or clear) a task's status. `todo` removes the entry, so the map only ever holds real
