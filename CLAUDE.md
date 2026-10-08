@@ -33,7 +33,7 @@ index.html  src/           the app (browser ES modules, no build step)
   help.js                  the ? overlay, and the one-page staff card it prints
   roster.js                WebCrypto decrypt of roster.enc; caches the password, not the roster
   store/apiStore.js        shared schedule on the site; localStore.js is the offline fallback
-  export/                  run-of-show CSV, Authority-sheet sync CSV, print view
+  export/                  run-of-show CSV, Authority-sheet sync CSV, print view (one event or all)
 api/placements.php         shared schedule storage; version-checked writes, password on every request
 packs/nylt-27-1/           five CSVs + templates.json — see docs/CONTENT-PACKS.md
 scripts/                   import-catalog, encrypt-roster, build, name-guard, validate-pack, lint

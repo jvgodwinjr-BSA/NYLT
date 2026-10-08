@@ -1,8 +1,8 @@
 // Run-of-show CSV for the current event: one row per placement, day by day, in time order.
-import { state, currentEvent, eventPlacements, activityById, resourceLabel } from '../state.js?v=7';
-import { toCsv } from '../csv.js?v=7';
-import { downloadText, } from '../store/localStore.js?v=7';
-import { fmt12, minToHHMM } from '../util.js?v=7';
+import { state, currentEvent, eventPlacements, activityById, resourceLabel } from '../state.js?v=8';
+import { toCsv } from '../csv.js?v=8';
+import { downloadText, } from '../store/localStore.js?v=8';
+import { fmt12, minToHHMM } from '../util.js?v=8';
 
 export function runOfShowRows(ev = currentEvent(), violations = state.violations) {
   const vByP = new Map();

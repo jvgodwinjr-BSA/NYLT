@@ -10,7 +10,7 @@
 //
 // The shared password is deliberately not written here. A card handed to two dozen teenagers gets
 // photographed and forwarded, and at that point encrypting the roster has bought nothing.
-import { el, clear } from './util.js?v=7';
+import { el, clear } from './util.js?v=8';
 
 export const HELP = [
   {

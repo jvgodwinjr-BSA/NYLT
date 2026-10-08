@@ -14,6 +14,7 @@ Notable changes to the Program Scheduler. Format follows [Keep a Changelog](http
 - A "hide finished" filter in the rail, which is what shrinks a 130-task list as the team works through it.
 - **Help for the people who use the site, rather than build it.** A `? Help` button opens a short overlay, and the same sections print as a **one-page staff card** — one source, so the card cannot drift from the app. 23 of the 30 roles on this course are held by youth staff, and every one of the ten existing documents was written for someone who would run `npm run check`.
 - The card deliberately **does not carry the shared password**. A page handed to two dozen teenagers gets photographed and forwarded, and the password is the only thing protecting the encrypted names; it says "ask your ACD" instead.
+- **Print all weekends** in the Export menu — every weekend with something scheduled, each on a fresh sheet so the stack splits by weekend. Printing one weekend at a time meant six trips through the event dropdown, and the whole set is what you want on paper before staffing is settled. The menu item carries the count, an empty weekend is named on the cover rather than printed blank, and the single-event print is unchanged.
 - [docs/USER-GUIDE.md](docs/USER-GUIDE.md) for adult staff — lanes, red and amber, tasks and pace, saving, two people at once, exports. The README's documentation index is now split into *using it* and *working on it*.
 
 ### Fixed

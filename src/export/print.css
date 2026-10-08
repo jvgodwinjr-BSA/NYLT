@@ -13,6 +13,12 @@ body { display: block !important; background: #fff !important; color: #000; font
 .ros tr.all td { font-weight: 600; background: #f6f6f6; }
 .ros .flag { color: #b00; }
 
+/* Each weekend starts a new sheet, so a stack of them can be split and handed out per weekend. */
+.print-event { break-before: page; page-break-before: always; }
+.print-event:first-of-type { break-before: auto; page-break-before: auto; }
+.print-cover { font-size: 18pt; margin: 0 0 4pt; }
+#print-view .print-event h1 { font-size: 16pt; margin: 0 0 4pt; }
+
 /* The one-page staff card, printed from the ? overlay. Two columns so it stays on one sheet. */
 .help-card { column-count: 2; column-gap: 10mm; margin-top: 4pt; }
 .help-card .help-s { break-inside: avoid; margin: 0 0 7pt; }

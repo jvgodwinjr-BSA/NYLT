@@ -131,8 +131,14 @@ redirects, so this only bites on a hand-typed address.
 
 - **Run-of-show CSV** — the weekend you are looking at, as a spreadsheet.
 - **Authority sheet sync CSV** — updates back into the Presentations Authority workbook.
-- **Print / Save as PDF** — the run of show, one table per day. Do this before you leave for camp;
-  the signal is poor and paper does not need a password.
+- **Print / Save as PDF (this event)** — the run of show for the weekend on screen, one table per day.
+- **Print all weekends** — every weekend that has something scheduled, each starting on a fresh
+  sheet so the stack can be split and handed out per weekend. A weekend with nothing on it is left
+  out and named on the cover rather than printed as a blank page.
+
+Print before you leave for camp: the signal is poor and paper does not need a password. The
+**People** column stays empty until somebody is assigned to a block, so an early printout is a
+timetable rather than a duty roster — which is what you want while staffing is still being decided.
 
 The **? Help** overlay also prints a one-page staff card, which is the right thing to hand to youth
 staff at a weekend.

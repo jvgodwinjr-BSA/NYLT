@@ -1,18 +1,18 @@
-import { PACK_ID } from './config.js?v=7';
-import { loadPack } from './pack.js?v=7';
-import { state, subscribe, setEvent, setView, undo, redo, currentEvent, replaceSchedule, addPlacement, eventPlacements, select, activities } from './state.js?v=7';
-import { localStore, serializeSchedule, downloadText, pickFile } from './store/localStore.js?v=7';
-import { renderRail } from './catalog.js?v=7';
-import { renderCanvas } from './canvas.js?v=7';
-import { installDrag } from './drag.js?v=7';
-import { renderBlockEditor, showQuickActivity } from './editor.js?v=7';
-import { evaluate, byPlacement, coverageMatrix } from './conflicts.js?v=7';
-import { progress } from './progress.js?v=7';
-import { fetchRosterBlob, decryptRoster, cachePassword, cachedPassword, forgetRoster, cryptoAvailable } from './roster.js?v=7';
-import { createApiStore, ApiConflict, ApiUnauthorized } from './store/apiStore.js?v=7';
-import { el, clear } from './util.js?v=7';
-import { renderPrintView } from './export/printView.js?v=7';
-import { showHelp, renderHelpCard } from './help.js?v=7';
+import { PACK_ID } from './config.js?v=8';
+import { loadPack } from './pack.js?v=8';
+import { state, subscribe, setEvent, setView, undo, redo, currentEvent, replaceSchedule, addPlacement, eventPlacements, select, activities } from './state.js?v=8';
+import { localStore, serializeSchedule, downloadText, pickFile } from './store/localStore.js?v=8';
+import { renderRail } from './catalog.js?v=8';
+import { renderCanvas } from './canvas.js?v=8';
+import { installDrag } from './drag.js?v=8';
+import { renderBlockEditor, showQuickActivity } from './editor.js?v=8';
+import { evaluate, byPlacement, coverageMatrix } from './conflicts.js?v=8';
+import { progress } from './progress.js?v=8';
+import { fetchRosterBlob, decryptRoster, cachePassword, cachedPassword, forgetRoster, cryptoAvailable } from './roster.js?v=8';
+import { createApiStore, ApiConflict, ApiUnauthorized } from './store/apiStore.js?v=8';
+import { el, clear } from './util.js?v=8';
+import { renderPrintView, printableEvents } from './export/printView.js?v=8';
+import { showHelp, renderHelpCard } from './help.js?v=8';
 
 const $ = (s) => document.querySelector(s);
 const LAST_EVENT_KEY = (packId) => `program-scheduler:last-event:${packId}`;
@@ -116,7 +116,9 @@ function renderHeader() {
       el('div.menu-items', {},
         el('button.btn', { onClick: () => exportRunOfShow() }, 'Run-of-show CSV (this event)'),
         el('button.btn', { onClick: () => exportSheetSync() }, 'Authority sheet sync CSV'),
-        el('button.btn', { onClick: () => window.print() }, 'Print / Save as PDF'))),
+        el('button.btn', { onClick: () => window.print() }, 'Print / Save as PDF (this event)'),
+        el('button.btn', { onClick: printAllEvents, title: 'Every weekend that has something scheduled, each starting on a new page' },
+          `Print all weekends (${printableEvents().length})`))),
     state.rosterBlob ? (state.roster
       ? el('button.btn', { onClick: () => { forgetRoster(); state.roster = null; state.password = null; state.remote = null; clearInterval(pollTimer); setSync('local', 'locked'); render('view'); }, title: 'Forget the password on this device and stop saving to the site' }, '🔓 Names on · Lock')
       : el('button.btn', { onClick: () => showGate(state.rosterBlob).then(async (ok) => { if (ok) await connectToSite(); render('view'); }) }, '🔒 Unlock names')) : null,
@@ -160,8 +162,8 @@ async function loadJson() {
     render('view');
   } catch (e) { alert(`Could not load: ${e.message}`); }
 }
-async function exportRunOfShow() { const m = await import('./export/runOfShow.js?v=7'); m.exportRunOfShowCsv(); }
-async function exportSheetSync() { const m = await import('./export/sheetSync.js?v=7'); m.exportSheetSyncCsv(); }
+async function exportRunOfShow() { const m = await import('./export/runOfShow.js?v=8'); m.exportRunOfShowCsv(); }
+async function exportSheetSync() { const m = await import('./export/sheetSync.js?v=8'); m.exportSheetSyncCsv(); }
 
 // ---------- roster gate ----------
 function showGate(blob) {
@@ -215,6 +217,18 @@ function printHelpCard() {
   setTimeout(restore, 2000);
 }
 function openHelp() { showHelp({ onPrint: printHelpCard }); }
+
+/** Every weekend with something on it, one page break between each. Restores the single-event view. */
+function printAllEvents() {
+  const root = $('#print-view');
+  const events = printableEvents();
+  if (!events.length) { alert('Nothing is scheduled on any weekend yet.'); return; }
+  renderPrintView(root, { events });
+  const restore = () => { renderPrintView(root); window.removeEventListener('afterprint', restore); };
+  window.addEventListener('afterprint', restore);
+  window.print();
+  setTimeout(restore, 2000); // some browsers never fire afterprint
+}
 
 // ---------- right panel ----------
 const sdEvents = () => state.pack.constraints.find((c) => c.rule_type === 'practice_coverage')?.params?.sd_events ?? state.pack.events.filter((e) => /^SD/i.test(e.id)).map((e) => e.id);
