@@ -114,6 +114,7 @@ tests/                      node:test — conflict engine, progress maths, roste
 |---|---|
 | **? Help**, in the app | The shortest version, and the one youth staff will actually read. Prints a one-page staff card |
 | [docs/USER-GUIDE.md](docs/USER-GUIDE.md) | Lanes, red and amber, tasks and pace, saving, two people at once, exports |
+| [docs/REFERENCE.md](docs/REFERENCE.md) | **Every** feature, control and rule, in one file. Written to be read whole by a person taking this over, or loaded by an AI assistant answering questions about it |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Blank schedule, stale cache, names not showing, import failures |
 
 **Working on it** — assumes a checkout and `npm run check`.

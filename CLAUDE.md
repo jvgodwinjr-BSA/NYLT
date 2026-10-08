@@ -37,7 +37,8 @@ index.html  src/           the app (browser ES modules, no build step)
 api/placements.php         shared schedule storage; version-checked writes, password on every request
 packs/nylt-27-1/           five CSVs + templates.json — see docs/CONTENT-PACKS.md
 scripts/                   import-catalog, encrypt-roster, build, name-guard, validate-pack, lint
-docs/                      DATA-MODEL, CONTENT-PACKS, DEPLOY-HOSTINGER, YOUTH-PROTECTION
+docs/                      REFERENCE (everything, verbose), USER-GUIDE, DATA-MODEL,
+                           CONTENT-PACKS, DEPLOY-HOSTINGER, YOUTH-PROTECTION
 ```
 
 ## Verifying
