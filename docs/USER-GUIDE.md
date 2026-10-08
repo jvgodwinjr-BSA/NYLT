@@ -63,7 +63,7 @@ block and visible to whoever looks next.
 
 ## Tasks and progress
 
-Most of the staff workload is not on the clock — 125 of the 127 Quartermaster tasks are backlog,
+Most of the staff workload is not on the clock — most of the 127 Quartermaster tasks are backlog,
 not timed sessions. They live in the rail with a status instead.
 
 Set it from the circle on a rail row (one tap to finish, one to reopen), or from the block editor

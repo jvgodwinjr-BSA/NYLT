@@ -12,7 +12,7 @@ These are not style preferences. Breaking any of them breaks something real.
 
 1. **Never read or print the roster; use `npm run roster`.** `roster.local.csv` holds youth names, and anything an agent reads lands in a transcript. `npm run roster -- list` and `-- check` report coverage without names; `-- set <id> "<name>"` renames one person and re-encrypts. `.claude/settings.json` denies reading the file directly. Never commit a real person's name. The repository and the deployed site are public and the roster is mostly minors. Names live in `roster.local.csv` (gitignored) and reach the browser only as `public/roster.enc`. `npm run check:names` enforces this; `npm run install-hooks` makes it a pre-commit gate. Git history is permanent, so a name committed once is committed forever.
 2. **Zero runtime dependencies.** No bundler, no framework, no npm packages in `dependencies`. Hostinger runs `npm install && npm run build`; with nothing to install, that step cannot fail. `scripts/build.mjs` is a file copy. CSV parsing is `src/csv.js`, xlsx reading is `scripts/xlsx.mjs`.
-3. **`src/conflicts.js` and `src/progress.js` stay pure.** No DOM, no imports from `state.js` or `canvas.js`. `evaluate({placements, activities, events, constraints}) → Violation[]` and `progress({activities, events, tasks, asOf})` so tests and a future PHP/Node server can call them. `npm run lint` enforces this.
+3. **`src/conflicts.js`, `src/progress.js` and `src/validateSchedule.js` stay pure.** No DOM, no imports from `state.js` or `canvas.js` — so tests, the CLI scripts and a future PHP/Node server can all call them. `evaluate({placements, activities, events, constraints}) → Violation[]`, `progress({activities, placements, events, tasks, asOf})`, and `validateSchedule({doc, pack}) → {blocking, warning}`, which the app runs on Load JSON **and** `npm run check:schedule` runs from a terminal — one implementation, because a validator that disagrees with itself is worse than none. `npm run lint` enforces the purity.
 4. **Drag-and-drop only writes `Placement`** (and Quick activities). The catalog is authoritative and comes from CSV.
 5. **Times are camp-local minutes since midnight, always multiples of 15.** No `Date` arithmetic for schedule times, no timezones. `SLOT_MIN` in `src/config.js` is the one source of truth.
 6. **Never refuse a drop.** A conflicting placement lands and turns red. The tool reports; it does not overrule the person.
@@ -29,6 +29,7 @@ index.html  src/           the app (browser ES modules, no build step)
   canvas.js  drag.js       rendering and all pointer-event dragging
   conflicts.js             pure rule engine + coverage matrix
   progress.js              pure task roll-up: done, blocked, and how far ahead of pace
+  validateSchedule.js      pure import checks, shared by the app and check:schedule
   editor.js  catalog.js    right panel, left rail
   help.js                  the ? overlay, and the one-page staff card it prints
   roster.js                WebCrypto decrypt of roster.enc; caches the password, not the roster
@@ -64,6 +65,7 @@ npm run check:schedule -- <file>  # validate a saved schedule against the pack
 
 - Selecting a block re-renders the canvas and detaches the element. Read `getBoundingClientRect()` *before* calling `select()` (see the comment in `drag.js`).
 - `el()` ignores `null`/`false` children, but `append(...)` on an array containing `null` inserts the string "null" — filter first. This shipped twice, visibly, so `npm run lint` now refuses a possibly-null **top-level** argument to `.append(`. A conditional nested inside an `el(...)` child is fine and is not flagged.
+- A placement's `flags[]` is free-form and read by the rule engine. `override` and `overlap-ok` are both tick boxes in the block editor now; add and remove rather than assigning, or you will drop the other one.
 - An all-hands lane blocks every other lane. That is the mechanism behind "at meals we are all together"; do not special-case meals.
 - Several roster surnames are ordinary English words (Lane is the worst — "lane" is the app's core concept). `scripts/common-name-words.txt` is a generic, committed allowlist that stops ~80 false positives; per-roster additions are `-word` lines in the gitignored `scripts/scrub.local.txt`. Never move that generic list's contents into a roster-derived list — that leaks the names it protects.
 - The schedule is stored on the website, not the browser. `localStore` is only the offline fallback. A save carries the version it was based on; the server refuses a stale one with 409 rather than clobbering, and the client shows a conflict banner. Do not "simplify" that away.

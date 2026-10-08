@@ -48,7 +48,9 @@ Every event declares its lanes in `tracks.csv`. A lane with `is_all_hands=true` 
 
 `start_min` is minutes since midnight, always a multiple of 15. `duration_min` defaults from the activity and can be overridden per placement. `resource_ids` pre-fills from the activity's `owner_id`. Flags: `override` silences the TG-delivery warning; `overlap-ok` silences the lane-overlap rule for that block.
 
-**Flags** on a placement:
+**Flags** on a placement. `override` and `overlap-ok` are tick boxes in the block editor, because a
+flag records a decision and a decision has to be visible and reversible by whoever made it. They
+are a free-form array, so add and remove rather than assigning:
 
 | Flag | Effect |
 |---|---|

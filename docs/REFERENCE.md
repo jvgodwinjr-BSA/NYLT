@@ -178,6 +178,7 @@ With a block selected:
 - **Start** time and **Minutes**, showing the catalog default when you have overridden it
 - **People** — checkboxes by team (senior, adult, qm, tg). Shows names when unlocked, role codes otherwise
 - **Override** — silences the TG-delivery warning for this block only
+- **Overlap is deliberate** — silences the lane clash for this block: it is meant to run alongside whatever else is on
 - **Status** — on staff tasks only; see §5
 - **Notes** — free text, carried into exports and the printout
 - **Remove from schedule** / **Close**
@@ -289,10 +290,14 @@ on the canvas, because they concern things not yet placed.
 
 ### 6.2 The two escape hatches
 
-Both are per-block, visible to whoever looks next:
+Both are tick boxes in the block editor, per-block, visible to whoever looks next:
 
 - **Override** — "this TG module is in the main hall on purpose"
-- **overlap-ok** — "this parallel work is deliberate"
+- **Overlap is deliberate** — "this runs alongside whatever else is on"
+
+A flag records a decision, so it has to be visible and reversible by the people who make them. The
+second one was readable by the rule engine and settable by nothing for a while, which made a block
+somebody had deliberately marked indistinguishable from one nobody had looked at.
 
 ### 6.3 This pack's locked slots
 
@@ -474,6 +479,7 @@ index.html  src/
   drag.js          all pointer-event dragging and keyboard nudging
   conflicts.js     pure rule engine + coverage matrix
   progress.js      pure task roll-up: done, blocked, how far ahead of pace
+  validateSchedule.js  pure import checks, shared by the app and check:schedule
   catalog.js       left rail
   editor.js        block editor, quick activity, task status control
   help.js          the ? overlay and the one-page staff card
@@ -484,8 +490,10 @@ api/placements.php shared storage; version-checked writes, password on every req
 packs/nylt-27-1/   five CSVs + templates.json
 ```
 
-`conflicts.js` and `progress.js` are **pure** — no DOM, no state import — so tests and a future
-server can call them. `npm run lint` enforces it.
+`conflicts.js`, `progress.js` and `validateSchedule.js` are **pure** — no DOM, no state import —
+so tests, the CLI scripts and a future server can call them. `npm run lint` enforces it.
+`validateSchedule.js` is why the app's Load JSON check and `npm run check:schedule` can never
+disagree: they are the same function.
 
 ### Deployment
 
